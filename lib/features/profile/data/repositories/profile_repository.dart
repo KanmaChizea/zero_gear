@@ -22,7 +22,6 @@ class ProfileRepository {
 
   Future<Result<Profile>> upsertProfile({
     required String id,
-    required String name,
     required Gender gender,
     required double heightCm,
     required double weightKg,
@@ -32,7 +31,6 @@ class ProfileRepository {
           .from(Tables.profiles)
           .upsert({
             'id': id,
-            'name': name,
             'gender': gender.name,
             'height_cm': heightCm,
             'weight_kg': weightKg,

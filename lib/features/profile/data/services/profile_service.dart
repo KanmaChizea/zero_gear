@@ -24,7 +24,6 @@ class ProfileService extends Cubit<ProfileState> {
   }
 
   Future<Result<Profile>> completeOnboarding({
-    required String name,
     required Gender gender,
     required double heightCm,
     required double weightKg,
@@ -34,7 +33,6 @@ class ProfileService extends Cubit<ProfileState> {
 
     final saved = await _repository.upsertProfile(
       id: userId,
-      name: name,
       gender: gender,
       heightCm: heightCm,
       weightKg: weightKg,

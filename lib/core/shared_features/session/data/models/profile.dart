@@ -4,7 +4,6 @@ import 'gender.dart';
 
 class Profile extends Equatable {
   const Profile({
-    required this.name,
     required this.gender,
     required this.heightCm,
     required this.weightKg,
@@ -15,7 +14,6 @@ class Profile extends Equatable {
   });
 
   factory Profile.fromJson(Map<String, Object?> json) => Profile(
-    name: json['name']! as String,
     gender: Gender.values.byName(json['gender']! as String),
     heightCm: (json['height_cm']! as num).toDouble(),
     weightKg: (json['weight_kg']! as num).toDouble(),
@@ -25,7 +23,6 @@ class Profile extends Equatable {
     startedAt: DateTime.parse(json['started_at']! as String).toLocal(),
   );
 
-  final String name;
   final Gender gender;
   final double heightCm;
   final double weightKg;
@@ -35,7 +32,6 @@ class Profile extends Equatable {
   final DateTime startedAt;
 
   Map<String, Object?> toJson() => {
-    'name': name,
     'gender': gender.name,
     'height_cm': heightCm,
     'weight_kg': weightKg,
@@ -47,7 +43,6 @@ class Profile extends Equatable {
 
   @override
   List<Object?> get props => [
-    name,
     gender,
     heightCm,
     weightKg,

@@ -8,10 +8,12 @@ class AppScreen extends StatelessWidget {
     required this.children,
     this.header,
     this.footer,
+    this.scrollable = true,
   });
   final List<Widget> children;
   final Widget? footer;
   final Widget? header;
+  final bool scrollable;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,25 +24,17 @@ class AppScreen extends StatelessWidget {
             spacing: 24.h,
             children: [
               ?header,
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) => SingleChildScrollView(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minHeight: constraints.maxHeight,
-                      ),
-                      // Lets a Spacer in [children] fill the free space while
-                      // the content still scrolls when it is taller.
-                      child: IntrinsicHeight(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: children,
-                        ),
-                      ),
+              if (scrollable)
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: children,
                     ),
                   ),
-                ),
-              ),
+                )
+              else
+                ...children,
               ?footer,
             ],
           ),
