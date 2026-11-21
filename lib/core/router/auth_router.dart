@@ -1,19 +1,21 @@
 import 'package:go_router/go_router.dart';
 import 'package:zero_gear/core/shared_features/session/data/services/session_cubit.dart';
 import 'package:zero_gear/features/auth/ui/views/login_view.dart';
-import 'package:zero_gear/features/auth/ui/views/splash_view.dart';
 
 import 'app_route.dart';
 
 List<RouteBase> authRoutes() => [
-  AppRoute.splash.toGoRoute((_) => const SplashView()),
   AppRoute.login.toGoRoute((_) => const LoginView()),
 ];
 
 /// - Session not resolved yet: everything waits on the splash.
-/// - Splash, once resolved: home (or `from`) if signed in, otherwise login.
+/// - Splash, once resolved: landing if signed in, otherwise login.
 /// - Signed out: non-public routes go to login.
-/// - Signed in: login goes to home (or `from`).
+/// - Signed in: login goes to the landing.
+/// - Signed in without a profile: everything but the onboarding screens goes
+///   to onboarding.
+///
+/// The landing is home (or `from`) for an onboarded user, otherwise onboarding.
 ///
 /// The original destination is carried in `?from=` through splash and login,
 /// so deep links survive the redirects.
@@ -22,15 +24,9 @@ String? authRedirect(SessionCubit session, GoRouterState state) {
   final location = state.uri.toString();
   final from = state.uri.queryParameters['from'];
 
-  if (!session.isResolved) {
-    return route == AppRoute.splash
-        ? null
-        : _withFrom(AppRoute.splash.path, location);
-  }
-
-  if (route == AppRoute.splash) {
+  if (route == AppRoute.home) {
     return session.isSignedIn
-        ? _safeReturnPath(from) ?? AppRoute.home.path
+        ? _landing(session, from)
         : _withFrom(AppRoute.login.path, from);
   }
 
@@ -39,11 +35,25 @@ String? authRedirect(SessionCubit session, GoRouterState state) {
     return _withFrom(AppRoute.login.path, location);
   }
 
-  if (route == AppRoute.login) {
-    return _safeReturnPath(from) ?? AppRoute.home.path;
+  if (route == AppRoute.login) return _landing(session, from);
+
+  final onboarded = session.user?.isOnboarded ?? false;
+  if (!onboarded && !_onboardingRoutes.contains(route)) {
+    return AppRoute.onboardingIntro.path;
   }
   return null;
 }
+
+const _onboardingRoutes = {
+  AppRoute.onboardingIntro,
+  AppRoute.onboarding,
+  AppRoute.onboardingComplete,
+};
+
+String _landing(SessionCubit session, String? from) =>
+    session.user?.isOnboarded ?? false
+    ? _safeReturnPath(from) ?? AppRoute.home.path
+    : AppRoute.onboardingIntro.path;
 
 String _withFrom(String path, String? from) {
   final returnPath = _safeReturnPath(from);
@@ -60,6 +70,6 @@ String? _safeReturnPath(String? from) {
     return null;
   }
   final path = Uri.tryParse(from)?.path;
-  if (path == AppRoute.splash.path || path == AppRoute.login.path) return null;
+  if (path == AppRoute.login.path) return null;
   return from;
 }

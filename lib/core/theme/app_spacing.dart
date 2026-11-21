@@ -54,5 +54,6 @@ abstract final class AppSpacing {
     bottom: (bottom ?? 0).h,
   );
 
-  static EdgeInsets get screenPadding => EdgeInsets.symmetric(horizontal: 20.w);
+  static EdgeInsets get screenPadding =>
+      EdgeInsets.fromLTRB(24.w, 12.h, 24.w, 0);
 }

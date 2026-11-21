@@ -9,7 +9,7 @@ import 'stream_listenable.dart';
 
 GoRouter createAppRouter(SessionCubit session) {
   return GoRouter(
-    initialLocation: AppRoute.splash.path,
+    initialLocation: AppRoute.home.path,
     refreshListenable: StreamListenable(session.stream),
     redirect: (context, state) => authRedirect(session, state),
     errorBuilder: (context, state) => const NotFoundView(),

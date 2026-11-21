@@ -144,12 +144,13 @@ lib/
     theme/
       app_colors.dart             # AppColors: ThemeExtension with the Figma color tokens (light & dark)
       app_spacing.dart            # AppSpacing: scaled SizedBox vertical/horizontal & EdgeInsets padding tokens
-      app_text_styles.dart        # AppTextStyles: GoogleFonts body style + TextStyle.weight extension
+      app_text_styles.dart        # AppTextStyles: the Figma text styles in Inter + TextStyle.weight extension
       app_theme.dart              # AppTheme: ThemeData for light and dark modes
       theme_cubit.dart            # ThemeCubit: manages & persists ThemeMode (system, light, dark)
     shared_features/              # Data layers used by several features: <name>/data/{models,repositories,services}
       session/                    # SessionCubit, SessionState, User, Profile, Gender: who is signed in, with their profile
     widgets/
+      feedback/                   # Loader (full-screen logo loader), LoaderHost
       buttons/                    # App-wide button components
       containers/                 # App-wide card/container wrappers
         content_width.dart        # ContentWidth: centres a child and caps its width on tablets
@@ -199,7 +200,7 @@ widgets  ui model    core/shared_features/session
 - `ui/` may import from `data/`; `data/` never imports from `ui/`.
 - Parsing and endpoint-specific error handling happen in repositories: they `map` API/storage responses into typed models (entities, or result types like `SignInResult` in `data/models/`), special-case errors where an endpoint needs it, and return a `Result`. If the backend's shape differs from an entity, parse into a response model in `data/models/` and convert it inside the repository. Services and view models never see raw JSON.
 - Views talk to their view model for screen state and actions, and may read app-wide state (`SessionCubit`) directly. View models depend on services, never on repositories.
-- Exception: a view with no UI state that only triggers a one-off call may call its feature's service directly instead of having a view model (e.g. `SplashView` → `AuthService.restoreSession()`).
+- Exception: a view with no UI state that only triggers a one-off call may call its feature's service directly instead of having a view model.
 - Features never import other features, with one exception: any feature may use `AuthService` (auth underpins the whole app, e.g. Profile signs out through it). Anything else several features need lives in `core/` (e.g. `core/shared_features/session`, `core/router`).
 - Data used by more than one feature (repositories, services and models) lives in `core/shared_features/<name>/data/`, laid out like a feature's `data/` folder. Features import it from there. Shared features never import features, and never import each other, except that any of them may use `session`. A feature that combines shared services into one screen's data keeps that service in its own `data/` (e.g. `HomeService`).
 - Services are Cubits: `class ProfileService extends Cubit<ProfileState>`. The state is the data the service is the source of truth for, so view models can listen to it, and the methods that load or change data return a `Result`. `AppProvider` provides each one with `BlocProvider`, and `clearAll` resets them when the user signs out.
@@ -218,13 +219,13 @@ widgets  ui model    core/shared_features/session
 
 | Route | Path | Notes |
 |---|---|---|
-| `splash` | `/splash` | Public. Initial route; resolves the session, then leaves. |
 | `login` | `/login` | Public. |
 | `home` | `/home` | |
 | `stretchOffer`, `activeStretch`, `activeWorkout`, `workoutComplete` | `/home/stretch-offer`, `/home/active-stretch`, `/home/active-workout`, `/home/workout-complete` | Nested under `home` |
 | `profile` | `/profile` | |
-| `profileInfo`, `updateHeightWeight`, `weightChart`, `appearance`, `deleteAccount`, `onboardingIntro`, `onboarding`, `onboardingComplete` | `/profile/profile-info`, `/profile/update-height-weight`, `/profile/weight-chart`, `/profile/appearance`, `/profile/delete-account`, `/profile/onboarding-intro`, `/profile/onboarding`, `/profile/onboarding-complete` | Nested under `profile` |
+| `profileInfo`, `updateHeightWeight`, `weightChart`, `appearance`, `deleteAccount` | `/profile/profile-info`, `/profile/update-height-weight`, `/profile/weight-chart`, `/profile/appearance`, `/profile/delete-account` | Nested under `profile` |
 | `confirmDelete` | `/profile/delete-account/confirm-delete` | Nested under `deleteAccount` |
+| `onboardingIntro`, `onboarding`, `onboardingComplete` | `/onboarding-intro`, `/onboarding`, `/onboarding-complete` | Signed-in users without a profile are sent here and can't leave until they have one. |
 | `accountDeleted` | `/account-deleted` | Public: the session is already gone when it shows. |
 
 - **Routes** are declared once in the `AppRoute` enum (`lib/core/router/app_route.dart`): the enum name is the route name, plus its path and whether it is public.
@@ -243,7 +244,7 @@ widgets  ui model    core/shared_features/session
   ```
 
   Works from dialogs and with pushed routes, and keeps go_router's location in sync (unlike `Navigator.popUntil`). Does nothing if the target is not in the stack (asserts in debug). If a route on the way has an `onExit` (e.g. an "unsaved changes?" dialog), it stops there; call it again after the user confirms.
-- **Splash and session restore**: the session starts as `unknown`. Until it is resolved, every location redirects to `/splash` (keeping the original in `?from=`). `SplashView` calls `AuthService.restoreSession()`, which starts the session from the one the Supabase SDK restored (see **Session and storage**). Once resolved, the splash redirects to `from` / `/home` if signed in, otherwise to `/login` (still carrying `from`).
+- **Session restore**: `main()` builds `AuthService` and awaits `restoreSession()` before `runApp`, so the session is resolved before the router first redirects (the native splash covers the wait). The session starts from the one the Supabase SDK restored. If the profile fetch fails, a matching cached user is used so a transient error doesn't send the user to login.
 - **Auth redirect**: the router refreshes on every `SessionCubit` change (via `StreamListenable`). Signed out, any non-public route goes to `/login?from=<where you were going>`; after sign-in the user lands on `from` (only if it is an in-app path), otherwise `/home`. Signing out (`AuthService.signOut()`) calls `/auth/logout`, clears the session and returns to login. Views never navigate after restore/sign-in/sign-out themselves.
 - **Argument protection**: path parameters are constrained in the path pattern (`items/:id([1-9]\d*)`), so a malformed deep link such as `/home/items/abc` never matches and shows the 404 page. Builders can then parse safely. Pass IDs, not objects: `extra` is lost on deep links and app restarts.
 - **404**: any unmatched location renders `NotFoundView` with a way back home. `/` redirects to `/home`.
@@ -350,13 +351,15 @@ If a screen needs extra state alongside the list, keep the `PaginatedViewModel` 
 
 Theme configuration lives in `lib/core/theme/`:
 
-- `AppColors` (`lib/core/theme/app_colors.dart`): `ThemeExtension<AppColors>` with the Figma `Color` tokens for light and dark: `background`, `surface`, `surfaceVariant`, `inverse`, `text`, `textSecondary`, `textInverse`, `border`, `borderStrong`, `primary` (Ember) and `onPrimary`, `success` and `onSuccess`. `primary` and `success` are the same in both modes. Text on them is near black.
-- `AppTextStyles` (`lib/core/theme/app_text_styles.dart`): Base typography powered by `google_fonts` (`GoogleFonts.inter`). Exposes a single `body` text style for the template, alongside a `weight(FontWeight)` extension on `TextStyle` to rebuild styles with different font weights (e.g. `AppTextStyles.body.weight(FontWeight.bold)`).
+- `AppColors` (`lib/core/theme/app_colors.dart`): `ThemeExtension<AppColors>` with the Figma `Color` tokens for light and dark: `background`, `surface`, `surfaceVariant`, `inverse`, `text`, `textSecondary`, `textInverse`, `border`, `borderStrong`, `primary` (Ember) and `onPrimary`, `success` and `onSuccess`, `error` and `onError`. `primary`, `success` and `error` are the same in both modes. Text on them is near black.
+- `AppTextStyles` (`lib/core/theme/app_text_styles.dart`): The Figma text styles in Inter, via `google_fonts`: `display` (30 bold), `title` (22 bold), `heading` (16 semibold), `body` (14), `bodyMedium` (14 medium), `caption` (12), `label` (11 semibold, letter-spaced, for uppercase labels) and `numeric` (64 bold, for big numbers). Sizes scale with `.sp`. There is also a `weight(FontWeight)` extension on `TextStyle` to rebuild styles with different font weights (e.g. `AppTextStyles.body.weight(FontWeight.bold)`).
 - `AppSpacing` (`lib/core/theme/app_spacing.dart`): Spacing tokens scaled with `ScaleUtil`: `SizedBox` vertical (`v4`-`v48`, scaled by height) and horizontal (`h4`-`h32`, scaled by width) gaps, plus `EdgeInsets` padding presets and helpers (`symmetricPadding`, `fromLTRB`, `only`) that scale horizontal values by width and vertical values by height. Tokens are getters, not `const`, because they depend on the screen size.
 - `AppText` (`lib/core/widgets/text/app_text.dart`): Reusable text widget with default theme typography and text color, accepting `style`, `color`, `textAlign`, `maxLines`, and `overflow`.
 - `ScaleUtil` (`lib/core/utils/scale_util.dart`): Scales design sizes to the current screen. Initialized in `main()` with the design frame (default `375 x 812`); pass `designWidth` / `designHeight` to `ScaleUtil.init` if your designs use a different frame. Use `ScaleUtil.w(...)` for widths, icons and horizontal padding, `ScaleUtil.h(...)` for heights and vertical spacing, and `ScaleUtil.sp(...)` for font sizes (dampened so text scales less than layout). Factors use the screen's shortest side for widths and longest side for heights, so they don't change with orientation, and are capped at `1.2` so phones scale exactly as designed while tablets don't render everything twice as large. They are first computed at startup in `main()`; `App` in `lib/main.dart` calls `ScaleUtil.update(MediaQuery.sizeOf(context))` from `MaterialApp.router`'s `builder`, so they are recalculated whenever the window size changes (rotation, iPad split view). Also exposes `num` extensions (`16.w`, `16.h`, `14.sp`, `8.r`, where `r` scales by width), which `AppSpacing` uses.
 - `AppLayout` (`lib/core/constants/app_layout.dart`): Tablet layout constants: `tabletBreakpoint` (600), and max widths for text-heavy screens (`maxContentWidth`), grids (`maxCatalogWidth`), and auth forms (`maxAuthFormWidth`). All are wider than a phone, so phones are unaffected.
 - `ContentWidth` (`lib/core/widgets/containers/content_width.dart`): Centres its `child` and stops it growing past `maxWidth` (default `AppLayout.maxContentWidth`) by adding horizontal inset on wider screens. Narrower screens get no extra padding. Wrap a screen body in it, e.g. `ContentWidth(child: ListView(...))`, or pass another width such as `AppLayout.maxAuthFormWidth`.
+- `Button` (`lib/core/widgets/buttons/button.dart`): The Figma button, a pill 56 high (36 when `fullWidth: false`). `ButtonVariant.filled` is Ember with near-black text (Primary), `outlined` is the background colour with a 1.5 border in the text colour (Secondary), `text` has no fill. `isLoading` swaps the label for a spinner and ignores taps; `enabled: false` greys it out. `backgroundColor` and `foregroundColor` override the colours, e.g. for the light pill on a dark card.
+- `Loader` (`lib/core/widgets/feedback/loader.dart`): Full-screen loader. `Loader.show()` covers the app with the logo while the kettlebell circles the ring, `Loader.hide()` removes it. No `BuildContext` needed, so services and view models can call it. Calls are counted: each `Loader.show()` needs its own `Loader.hide()`, and the loader goes away when the count reaches zero. `LoaderHost` (in `loader_host.dart`) draws it; `App` wraps the router in it through the `MaterialApp.router` builder.
 - `AppRichText` (`lib/core/widgets/text/app_rich_text.dart`): Renders a list of `AppTextSpan`s in one paragraph, with the same arguments as `AppText` (`style`, `color`, `textAlign`, `maxLines`, `overflow`) and the same defaults. Each `AppTextSpan` takes its text plus an optional `style` (merged over the parent style), `color` and `onTap` (tap recognizers are created and disposed by the widget).
 - `SvgIcon` (`lib/core/widgets/icons/svg_icon.dart`): Renders an SVG asset with `flutter_svg`, e.g. `SvgIcon(AppSvgs.arrowBack, size: 24)`. Tinted with `context.colors.text` by default (override with `color`, or pass `keepOriginalColors: true` to render the SVG's own colors, e.g. for logos); `size` is a design value scaled by width so the icon stays square.
 - `AppTheme` (`lib/core/theme/app_theme.dart`): Builds `ThemeData` for `light` and `dark` modes, configuring Material 3, `scaffoldBackgroundColor`, `colorScheme`, and theme extensions.

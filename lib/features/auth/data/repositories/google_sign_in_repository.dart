@@ -1,3 +1,7 @@
+import 'dart:convert';
+import 'dart:math';
+
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:zero_gear/core/config/env_config.dart';
@@ -11,6 +15,10 @@ import '../models/google_credentials.dart';
 class GoogleSignInRepository {
   bool _initialized = false;
 
+  // Google puts the hashed nonce in the ID token; Supabase needs the raw value
+  // to verify it. Google can only be initialized once, so it lives per process.
+  final String _rawNonce = _generateNonce();
+
   Future<void> _ensureInitialized() async {
     if (_initialized) return;
     await GoogleSignIn.instance.initialize(
@@ -18,6 +26,7 @@ class GoogleSignInRepository {
           ? EnvConfig.googleIosClientId
           : null,
       serverClientId: EnvConfig.googleWebClientId,
+      nonce: sha256.convert(utf8.encode(_rawNonce)).toString(),
     );
     _initialized = true;
   }
@@ -41,6 +50,7 @@ class GoogleSignInRepository {
         GoogleCredentials(
           idToken: idToken,
           accessToken: authorization.accessToken,
+          nonce: _rawNonce,
         ),
       );
     } on GoogleSignInException catch (error) {
@@ -69,4 +79,9 @@ class GoogleSignInRepository {
       AppLogger.log('Google sign-out failed: $error');
     }
   }
+}
+
+String _generateNonce() {
+  final random = Random.secure();
+  return base64UrlEncode(List.generate(32, (_) => random.nextInt(256)));
 }

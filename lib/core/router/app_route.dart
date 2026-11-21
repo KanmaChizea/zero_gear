@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 /// Every route in the app. [name] is the enum name; [path] is relative for
 /// nested routes. Navigate by name: `context.goNamed(AppRoute.home.name)`.
 enum AppRoute {
-  splash('/splash', isPublic: true),
   login('/login', isPublic: true),
   accountDeleted('/account-deleted', isPublic: true),
   home('/home'),
@@ -19,9 +18,9 @@ enum AppRoute {
   appearance('appearance'),
   deleteAccount('delete-account'),
   confirmDelete('confirm-delete'),
-  onboardingIntro('onboarding-intro'),
-  onboarding('onboarding'),
-  onboardingComplete('onboarding-complete');
+  onboardingIntro('/onboarding-intro'),
+  onboarding('/onboarding'),
+  onboardingComplete('/onboarding-complete');
 
   const AppRoute(this.path, {this.isPublic = false});
 

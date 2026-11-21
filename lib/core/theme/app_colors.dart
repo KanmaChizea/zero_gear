@@ -15,6 +15,8 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.onPrimary,
     required this.success,
     required this.onSuccess,
+    required this.error,
+    required this.onError,
   });
 
   final Color background;
@@ -30,9 +32,12 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color onPrimary;
   final Color success;
   final Color onSuccess;
+  final Color error;
+  final Color onError;
 
   static const _ember = Color(0xFFD85A30);
   static const _green = Color(0xFF5DAA79);
+  static const _red = Color(0xFFE5575F);
   static const _black = Color(0xFF161615);
 
   static const light = AppColors(
@@ -49,6 +54,8 @@ class AppColors extends ThemeExtension<AppColors> {
     onPrimary: _black,
     success: _green,
     onSuccess: _black,
+    error: _red,
+    onError: _black,
   );
 
   static const dark = AppColors(
@@ -65,6 +72,8 @@ class AppColors extends ThemeExtension<AppColors> {
     onPrimary: _black,
     success: _green,
     onSuccess: _black,
+    error: _red,
+    onError: _black,
   );
 
   static AppColors of(BuildContext context) =>
@@ -85,6 +94,8 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? onPrimary,
     Color? success,
     Color? onSuccess,
+    Color? error,
+    Color? onError,
   }) {
     return AppColors(
       background: background ?? this.background,
@@ -100,6 +111,8 @@ class AppColors extends ThemeExtension<AppColors> {
       onPrimary: onPrimary ?? this.onPrimary,
       success: success ?? this.success,
       onSuccess: onSuccess ?? this.onSuccess,
+      error: error ?? this.error,
+      onError: onError ?? this.onError,
     );
   }
 
@@ -121,6 +134,8 @@ class AppColors extends ThemeExtension<AppColors> {
       onPrimary: mix(onPrimary, other.onPrimary),
       success: mix(success, other.success),
       onSuccess: mix(onSuccess, other.onSuccess),
+      error: mix(error, other.error),
+      onError: mix(onError, other.onError),
     );
   }
 }

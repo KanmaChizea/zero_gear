@@ -36,7 +36,11 @@ class AuthService extends Cubit<AuthActivity> {
       final profile = cached?.id == current.id ? cached?.profile : null;
       if (profile == null) {
         final loaded = await _withProfile(current);
-        if (loaded case Ok(:final value)) await _session.start(value);
+        if (loaded case Ok(:final value)) {
+          await _session.start(value);
+        } else if (cached?.id == current.id) {
+          await _session.start(current.withProfile(null));
+        }
       } else {
         await _session.start(current.withProfile(profile));
         unawaited(_refreshProfile());

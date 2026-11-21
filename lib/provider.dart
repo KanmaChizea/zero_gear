@@ -5,8 +5,6 @@ import 'package:zero_gear/core/shared_features/session/data/services/session_cub
 import 'package:zero_gear/core/network/network_client.dart';
 import 'package:zero_gear/core/storage/local_storage.dart';
 import 'package:zero_gear/core/theme/theme_cubit.dart';
-import 'package:zero_gear/features/auth/data/repositories/auth_repository.dart';
-import 'package:zero_gear/features/auth/data/repositories/google_sign_in_repository.dart';
 import 'package:zero_gear/features/auth/data/services/auth_service.dart';
 import 'package:zero_gear/features/home/data/repositories/plan_repository.dart';
 import 'package:zero_gear/features/home/data/repositories/workout_local_repository.dart';
@@ -22,6 +20,7 @@ class AppProvider extends StatelessWidget {
     super.key,
     required this.session,
     required this.themeCubit,
+    required this.auth,
     required this.client,
     required this.localStorage,
     required this.child,
@@ -29,6 +28,7 @@ class AppProvider extends StatelessWidget {
 
   final SessionCubit session;
   final ThemeCubit themeCubit;
+  final AuthService auth;
   final NetworkClient client;
   final LocalStorage localStorage;
   final Widget child;
@@ -51,14 +51,7 @@ class AppProvider extends StatelessWidget {
         value: localStorage,
         child: MultiBlocProvider(
           providers: [
-            BlocProvider(
-              lazy: false,
-              create: (_) => AuthService(
-                AuthRepository(client),
-                GoogleSignInRepository(),
-                session,
-              ),
-            ),
+            BlocProvider.value(value: auth),
             BlocProvider(
               create: (_) =>
                   ProfileService(ProfileRepository(client), session),

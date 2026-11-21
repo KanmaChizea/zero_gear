@@ -37,6 +37,7 @@ class AuthRepository {
         provider: sb.OAuthProvider.google,
         idToken: credentials.idToken,
         accessToken: credentials.accessToken,
+        nonce: credentials.nonce,
       ),
     );
     return result.andThen<User>((response) async {

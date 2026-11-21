@@ -43,12 +43,10 @@ List<RouteBase> featureRoutes() => [
           AppRoute.confirmDelete.toGoRoute((_) => const ConfirmDeleteView()),
         ],
       ),
-      AppRoute.onboardingIntro.toGoRoute((_) => const OnboardingIntroView()),
-      AppRoute.onboarding.toGoRoute((_) => const OnboardingView()),
-      AppRoute.onboardingComplete.toGoRoute(
-        (_) => const OnboardingCompleteView(),
-      ),
     ],
   ),
+  AppRoute.onboardingIntro.toGoRoute((_) => const OnboardingIntroView()),
+  AppRoute.onboarding.toGoRoute((_) => const OnboardingView()),
+  AppRoute.onboardingComplete.toGoRoute((_) => const OnboardingCompleteView()),
   AppRoute.accountDeleted.toGoRoute((_) => const AccountDeletedView()),
 ];
