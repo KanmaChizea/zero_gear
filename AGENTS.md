@@ -31,6 +31,8 @@ lib/
 │       └── ...
 ```
 
+Features never import other features (the one exception is `AuthService`). Data used by several features lives in `core/shared_features/<name>/data/`, which may import only `session`. The signed-in user and profile come from `SessionCubit`.
+
 Follow the established project structure when adding new features. Do not introduce a new architectural pattern or significantly restructure the project without a clear reason.
 
 ### MVVM
@@ -38,7 +40,7 @@ Follow the established project structure when adding new features. Do not introd
 * **View**: Responsible for rendering UI and handling presentation concerns.
 * **ViewModel**: Owns UI state and coordinates actions required by the view.
 * **Repository**: Handles communication with external data sources such as APIs or platform services.
-* **Service**: Acts as the source of truth for application data and handles data management.
+* **Service**: Acts as the source of truth for application data and handles data management. A service extends `Cubit` and exposes the data it owns as its state.
 * **Domain/use-case layers**: Optional. Introduce them only when business logic is sufficiently complex or reused across multiple ViewModels. Do not create use cases solely to wrap a repository call.
 
 Avoid adding abstractions unless they provide a clear benefit.

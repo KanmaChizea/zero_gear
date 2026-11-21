@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:zero_gear/core/session/session_cubit.dart';
+import 'package:zero_gear/core/shared_features/session/data/services/session_cubit.dart';
 import 'package:zero_gear/features/auth/data/services/auth_service.dart';
 
-import '../../data/services/profile_service.dart';
+import 'package:zero_gear/features/profile/data/services/profile_service.dart';
 import '../models/profile_ui_state.dart';
 import 'profile_view_model.dart';
 

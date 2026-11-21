@@ -1,10 +1,98 @@
-import '../repositories/home_repository.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zero_gear/core/extensions/date_extensions.dart';
+import 'package:zero_gear/core/shared_features/session/data/models/profile.dart';
+import 'package:zero_gear/core/shared_features/session/data/services/session_cubit.dart';
+import 'package:zero_gear/core/utils/app_exception.dart';
+import 'package:zero_gear/core/utils/result.dart';
+import 'plan_service.dart';
+import 'workout_service.dart';
 
-class HomeService {
-  HomeService(this._repository);
+import '../models/active_workout.dart';
+import '../models/home_summary.dart';
+import '../models/plan_day_summary.dart';
+import '../models/progress_rating.dart';
+import '../models/workout_history.dart';
 
-  // ignore: unused_field
-  final HomeRepository _repository;
+class HomeService extends Cubit<HomeSummary?> {
+  HomeService(this._session, this._plan, this._workouts) : super(null);
 
-  // TODO: add operations.
+  final SessionCubit _session;
+  final PlanService _plan;
+  final WorkoutService _workouts;
+
+  Future<Result<HomeSummary>> load({bool refresh = false}) async {
+    final profile = _session.user?.profile;
+    if (profile == null) {
+      return const Result.error(
+        AppException('Finish setting up your profile first.'),
+      );
+    }
+    final active = await _workouts.restoreActiveWorkout();
+    final history = await _workouts.history(refresh: refresh);
+    return history.andThen<HomeSummary>((history) async {
+      final next = await _plan.summaryFor(history.nextDay);
+      final summary = next.map(
+        (nextDay) => _summarize(profile, history, nextDay, active),
+      );
+      if (summary case Ok(:final value)) emit(value);
+      return summary;
+    });
+  }
+
+  void clear() => emit(null);
+
+  Future<Result<PlanListing>> loadPlan({int? throughDay}) async {
+    final history = await _workouts.history();
+    return history.andThen<PlanListing>((history) async {
+      final days = await _plan.summaries(
+        throughDay: throughDay ?? history.nextDay,
+      );
+      return days.map(
+        (days) => PlanListing(
+          days: days,
+          statusByDay: history.statusByDay,
+          nextDay: history.nextDay,
+        ),
+      );
+    });
+  }
+
+  HomeSummary _summarize(
+    Profile profile,
+    WorkoutHistory history,
+    PlanDaySummary nextDay,
+    ActiveWorkout? active,
+  ) {
+    final today = DateTime.now().dateOnly;
+    final completedThisWeek = history.completedBetween(
+      today.startOfWeek,
+      today,
+    );
+    final daysSinceStart = today.daysSince(profile.startedAt.dateOnly);
+    final weeksSinceStart = daysSinceStart / 7;
+
+    final weekRating = history.completedCount == 0
+        ? const ProgressRating.none()
+        : ProgressRating.fromWorkoutsPerWeek(completedThisWeek.toDouble());
+    final allTimeRating = weeksSinceStart < 1
+        ? const ProgressRating.none()
+        : ProgressRating.fromWorkoutsPerWeek(
+            history.completedCount / weeksSinceStart,
+          );
+
+    return HomeSummary(
+      profile: profile,
+      nextDay: nextDay,
+      todayWorkout: history.on(today),
+      activeWorkout: active,
+      stats: HomeStats(
+        completedThisWeek: completedThisWeek,
+        totalCompleted: history.completedCount,
+        daysSinceStart: daysSinceStart,
+      ),
+      weekRating: weekRating,
+      allTimeRating: allTimeRating,
+      calendar: history.statusByDate,
+    );
+  }
 }

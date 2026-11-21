@@ -1,0 +1,1 @@
+enum WorkoutStatus { completed, incomplete }

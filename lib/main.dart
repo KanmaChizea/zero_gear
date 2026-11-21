@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'
+    show FlutterAuthClientOptions, Supabase;
 import 'package:zero_gear/core/config/env_config.dart';
 import 'package:zero_gear/core/config/flavor.dart';
-import 'package:zero_gear/core/network/dio_api_client.dart';
+import 'package:zero_gear/core/network/network_client.dart';
 import 'package:zero_gear/core/router/app_router.dart';
-import 'package:zero_gear/core/session/session_cubit.dart';
+import 'package:zero_gear/core/shared_features/session/data/services/session_cubit.dart';
 import 'package:zero_gear/core/storage/local_storage.dart';
+import 'package:zero_gear/core/storage/secure_session_storage.dart';
 import 'package:zero_gear/core/theme/app_theme.dart';
 import 'package:zero_gear/core/theme/theme_cubit.dart';
 import 'package:zero_gear/core/utils/scale_util.dart';
@@ -16,17 +19,21 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   ScaleUtil.init();
   await EnvConfig.init(Flavor.current);
+  await Supabase.initialize(
+    url: EnvConfig.baseUrl,
+    publishableKey: EnvConfig.publishableKey,
+    authOptions: FlutterAuthClientOptions(localStorage: SecureSessionStorage()),
+  );
   final localStorage = await LocalStorage.create();
 
   final session = SessionCubit();
   final themeCubit = ThemeCubit(localStorage);
-  final apiClient = DioApiClient(onSessionExpired: session.clear);
 
   runApp(
     AppProvider(
       session: session,
       themeCubit: themeCubit,
-      apiClient: apiClient,
+      client: NetworkClient(Supabase.instance.client),
       localStorage: localStorage,
       child: App(router: createAppRouter(session)),
     ),

@@ -33,6 +33,18 @@ extension ResultX<T> on Result<T> {
         Error(:final error) => onError(error),
       };
 
+  /// Runs [next] with the value, or passes the error through.
+  Future<Result<R>> andThen<R>(
+    Future<Result<R>> Function(T value) next,
+  ) async {
+    switch (this) {
+      case Ok(:final value):
+        return next(value);
+      case Error(:final error):
+        return Result.error(error);
+    }
+  }
+
   /// Transforms the value. If [transform] throws (e.g. a response that
   /// doesn't match the model), the result is a [ParseException].
   Result<R> map<R>(R Function(T value) transform) {

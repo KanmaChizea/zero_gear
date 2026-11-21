@@ -107,7 +107,8 @@ lib/
       flavor.dart                 # Flavor enum + Flavor.current
       env_config.dart             # EnvConfig: per-flavor values from env/.env.<flavor>
     constants/
-      endpoints.dart              # Endpoints: API paths
+      endpoints.dart              # Endpoints: API paths (for ApiClient; the Supabase backend does not use it)
+      supabase_names.dart         # Tables and Rpc: Supabase table and function names
       app_layout.dart             # AppLayout: tablet breakpoint and max widths for content, catalog, nav bar, auth forms
       app_svgs.dart               # AppSvgs: SVG asset paths (assets/svgs/)
       app_images.dart             # AppImages: image asset paths (assets/images/)
@@ -127,6 +128,7 @@ lib/
     extensions/
       string_extensions.dart      # toTitleCase, toSentenceCase, pluralSafe / plural, String?.isNullOrEmpty
       list_extensions.dart        # firstWhereOrNull, List?.isNullOrEmpty
+      date_extensions.dart        # dateOnly, isoDate (yyyy-MM-dd), startOfWeek (Monday), daysSince
     network/
       api_client.dart             # ApiClient interface: every call returns Result<T> (the response body)
       dio_api_client.dart         # DioApiClient: the Dio implementation
@@ -135,19 +137,19 @@ lib/
       auth_interceptor.dart       # Bearer token, 401 → refresh → retry
       auth_tokens.dart            # Access + refresh token pair
       logging_interceptor.dart    # Hooks AppLogger into Dio
-    session/
-      session_cubit.dart          # Who is signed in (Cubit<SessionState>); cached user, saves tokens on sign-in
-      session_state.dart          # unknown / authenticated / unauthenticated + user
-      user.dart                   # User entity
+      network_client.dart         # NetworkClient: wraps the Supabase client; request() runs a call and returns Result<T>
     storage/
       secure_storage.dart         # SecureStorage: Keychain / Keystore wrapper (tokens, cached user)
       local_storage.dart          # LocalStorage: shared_preferences wrapper for non-sensitive values
+      secure_session_storage.dart # SecureSessionStorage: keeps the Supabase session in the Keychain / Keystore
     theme/
       app_colors.dart             # AppColors: ThemeExtension with background, primary, text (light & dark)
       app_spacing.dart            # AppSpacing: scaled SizedBox vertical/horizontal & EdgeInsets padding tokens
       app_text_styles.dart        # AppTextStyles: GoogleFonts body style + TextStyle.weight extension
       app_theme.dart              # AppTheme: ThemeData for light and dark modes
       theme_cubit.dart            # ThemeCubit: manages & persists ThemeMode (system, light, dark)
+    shared_features/              # Data layers used by several features: <name>/data/{models,repositories,services}
+      session/                    # SessionCubit, SessionState, User, Profile, Gender: who is signed in, with their profile
     widgets/
       buttons/                    # App-wide button components
       containers/                 # App-wide card/container wrappers
@@ -160,7 +162,8 @@ lib/
       text/                       # AppText, AppRichText + AppTextSpan
       widget.dart                 # Root barrel export for core widgets
     utils/
-      result.dart                 # Result<T>: Ok / Error(AppException) + map / fold
+      result.dart                 # Result<T>: Ok / Error(AppException) + map / fold / andThen
+      json_utils.dart             # jsonStrings: a JSON string array, or empty
       app_exception.dart          # AppException(message, statusCode) + Parse / Unknown
       async_value.dart            # AsyncValue<T>: loading / data / error for UI state
       app_logger.dart             # AppLogger: boxed debug logs (log, logRequest/Response/Error)
@@ -191,14 +194,16 @@ tool/
 ```
 view → view model → service → repository
   ↓         ↓           ↓
-widgets  ui model    core/session
+widgets  ui model    core/shared_features/session
 ```
 
 - `ui/` may import from `data/`; `data/` never imports from `ui/`.
 - Parsing and endpoint-specific error handling happen in repositories: they `map` API/storage responses into typed models (entities, or result types like `SignInResult` in `data/models/`), special-case errors where an endpoint needs it, and return a `Result`. If the backend's shape differs from an entity, parse into a response model in `data/models/` and convert it inside the repository. Services and view models never see raw JSON.
 - Views talk to their view model for screen state and actions, and may read app-wide state (`SessionCubit`) directly. View models depend on services, never on repositories.
 - Exception: a view with no UI state that only triggers a one-off call may call its feature's service directly instead of having a view model (e.g. `SplashView` → `AuthService.restoreSession()`).
-- Features never import other features, with one exception: any feature may use `AuthService` (auth underpins the whole app, e.g. Profile signs out through it). Anything else several features need lives in `core/` (e.g. `core/session`, `core/router`).
+- Features never import other features, with one exception: any feature may use `AuthService` (auth underpins the whole app, e.g. Profile signs out through it). Anything else several features need lives in `core/` (e.g. `core/shared_features/session`, `core/router`).
+- Data used by more than one feature (repositories, services and models) lives in `core/shared_features/<name>/data/`, laid out like a feature's `data/` folder. Features import it from there. Shared features never import features, and never import each other, except that any of them may use `session`. A feature that combines shared services into one screen's data keeps that service in its own `data/` (e.g. `HomeService`).
+- Services are Cubits: `class ProfileService extends Cubit<ProfileState>`. The state is the data the service is the source of truth for, so view models can listen to it, and the methods that load or change data return a `Result`. `AppProvider` provides each one with `BlocProvider`, and `clearAll` resets them when the user signs out.
 - `core/` doesn't import from `features/`, with one exception: the route tables in `core/router/` (`auth_router.dart`, `shell_router.dart`) import feature views to register them.
 - Widgets get state and callbacks via constructors; they don't talk to view models.
 - One-off effects (navigation, snackbars) go in a `BlocListener` in the view, not in `build`.
@@ -237,7 +242,7 @@ widgets  ui model    core/session
 
   Works inside tabs, from dialogs and with pushed routes, and keeps go_router's location in sync (unlike `Navigator.popUntil`). Does nothing if the target is not in the stack (asserts in debug). If a route on the way has an `onExit` (e.g. an "unsaved changes?" dialog), it stops there; call it again after the user confirms.
 - **Tabs** use `StatefulShellRoute.indexedStack`: each tab keeps its own stack and state. Tapping the active tab pops it back to its root.
-- **Splash and session restore**: the session starts as `unknown`. Until it is resolved, every location redirects to `/splash` (keeping the original in `?from=`). `SplashView` calls `AuthService.restoreSession()`, which reads the stored access token and asks the repository for its user (see **Session and storage**). Once resolved, the splash redirects to `from` / `/home` if signed in, otherwise to `/login` (still carrying `from`).
+- **Splash and session restore**: the session starts as `unknown`. Until it is resolved, every location redirects to `/splash` (keeping the original in `?from=`). `SplashView` calls `AuthService.restoreSession()`, which starts the session from the one the Supabase SDK restored (see **Session and storage**). Once resolved, the splash redirects to `from` / `/home` if signed in, otherwise to `/login` (still carrying `from`).
 - **Auth redirect**: the router refreshes on every `SessionCubit` change (via `StreamListenable`). Signed out, any non-public route goes to `/login?from=<where you were going>`; after sign-in the user lands on `from` (only if it is an in-app path), otherwise `/home`. Signing out (`AuthService.signOut()`) calls `/auth/logout`, clears the session and returns to login. Views never navigate after restore/sign-in/sign-out themselves.
 - **Argument protection**: path parameters are constrained in the path pattern (`items/:id([1-9]\d*)`), so a malformed deep link such as `/home/items/abc` never matches and shows the 404 page. Builders can then parse safely. Pass IDs, not objects: `extra` is lost on deep links and app restarts.
 - **404**: any unmatched location renders `NotFoundView` with a way back home. `/` redirects to `/home`.
@@ -367,19 +372,15 @@ Two stores in `lib/core/storage/`, both with typed key enums:
 |---|---|---|
 | Backed by | [`flutter_secure_storage`](https://pub.dev/packages/flutter_secure_storage) (Keychain / Keystore) | [`shared_preferences`](https://pub.dev/packages/shared_preferences) (`SharedPreferencesWithCache`) |
 | For | Secrets and personal data | Non-sensitive settings and flags |
-| Keys | `SecureStorageKey`: `accessToken`, `refreshToken`, `cachedUser` | `LocalStorageKey`: `themeMode` |
+| Keys | `SecureStorageKey`: `accessToken`, `refreshToken`, `cachedUser`, `supabaseSession` | `LocalStorageKey`: `themeMode`, `activeWorkout`, `pendingWorkouts` |
 | Reads | async | sync (cache loaded at startup) |
 | Available via | `SecureStorage()` (singleton) | `context.read<LocalStorage>()` (created in `main()`, provided by `AppProvider`) |
 
 New keys must be added to the enum (`LocalStorage` only loads keys on its allow-list). Secure values that can't be decrypted are deleted and read as `null`.
 
-- `SecureStorage` is a singleton: `SecureStorage()` always returns the same instance, so classes use it directly instead of having it passed in. It keeps an in-memory cache: each key is read from the device once, then served from memory, so attaching the token to every request costs a map lookup. Writes and deletes update the cache, so it can't go stale (unless another isolate writes to secure storage directly). In tests that swap the mocked storage between cases, call `SecureStorage().resetCache()`. Tokens are read and written by `AuthInterceptor` (attach, refresh) and `SessionCubit` (save on sign-in, delete on sign-out).
-- `SessionCubit`: `start(user, tokens: ...)` saves the tokens and caches the user, `clear()` deletes only the session keys (`accessToken`, `refreshToken`, `cachedUser`); other secure keys survive sign-out.
-- On launch, `AuthService.restoreSession()`:
-  - no access token → signed out;
-  - `AuthRepository.fetchCurrentUser()` → `Ok(user)` → signed in; `Error(UnauthorizedException)` (refresh also failed) → everything deleted, signed out;
-  - any other error (e.g. offline) → signed in as the **cached user**; with no usable cache, shown as signed out but the tokens are kept so the next launch retries.
-  - anything unexpected (e.g. a storage failure) is logged and the session still resolves as signed out (tokens kept), so the splash can never get stuck.
+- `SecureStorage` is a singleton: `SecureStorage()` always returns the same instance, so classes use it directly instead of having it passed in. It keeps an in-memory cache: each key is read from the device once, then served from memory, so attaching the token to every request costs a map lookup. Writes and deletes update the cache, so it can't go stale (unless another isolate writes to secure storage directly). In tests that swap the mocked storage between cases, call `SecureStorage().resetCache()`. Tokens are read and written by `AuthInterceptor` (attach, refresh).
+- `SessionCubit` (`core/shared_features/session`) holds the `User`: the account (id, email, name) plus its `Profile` once onboarding is done. `start(user)` caches the user, `updateUser(user)` replaces it (ignored when signed out or for another id), `clear()` deletes only `cachedUser`. Features read the profile from `session.user.profile` instead of importing `ProfileService`; `ProfileService` writes changes back with `updateUser`. `AuthService` loads the profile on sign-in and on restore, so the router can send a user without a profile to onboarding.
+- On launch, `AuthService.restoreSession()` starts the session from the one `supabase_flutter` restored from the device (`SecureSessionStorage`, in the Keychain / Keystore): a session means signed in, none means signed out. The SDK refreshes the tokens itself. If it can't (the refresh token was revoked), it signs out and the `AuthService` listener clears the session.
 - **Fresh install** (iOS, native): Keychain items survive uninstall but `UserDefaults` don't, so `AppDelegate.clearKeychainOnFreshInstall()` (`ios/Runner/AppDelegate.swift`) checks a `hasLaunchedBefore` flag in `UserDefaults` at launch, before Flutter starts, and wipes the app's Keychain items if it's missing. A reinstall therefore starts signed out. Android needs nothing: uninstalling removes the app's data and Keystore keys, and backups are off. (Adding this to an app that is already released signs existing iOS users out once on update, since they don't have the flag yet.)
 - iOS: Keychain items use `KeychainAccessibility.first_unlock`, so they stay readable for background work after the first unlock.
 - Android: `android:allowBackup="false"` in `AndroidManifest.xml`. Auto Backup would restore encrypted values onto a device without the key, which can't decrypt them.
@@ -387,6 +388,8 @@ New keys must be added to the enum (`LocalStorage` only loads keys on its allow-
 ### Networking
 
 [Dio](https://pub.dev/packages/dio) behind the `ApiClient` interface (`lib/core/network/api_client.dart`), implemented by `DioApiClient`. Repositories depend on `ApiClient`, so tests can hand them a fake. `DioApiClient` reads `EnvConfig.baseUrl` and enables logging outside prod by itself. `main()` creates the single instance and passes it to `AppProvider`, which hands it to repositories through their constructors (e.g. `AuthRepository(apiClient)`); it is not in the widget tree. Keep it to one instance: concurrent 401s share a refresh only within the same client.
+
+> Zero Gear's backend is Supabase and uses `supabase_flutter` (see [Backend (Supabase)](#backend-supabase)), not `ApiClient`. `ApiClient`, the interceptors and `Endpoints` are the template's HTTP layer for any other API; the app doesn't use them today and they can be removed.
 
 The network layer doesn't know about the session: `DioApiClient` only takes an `onSessionExpired` callback, which `main()` wires to `session.clear`.
 
@@ -458,6 +461,32 @@ switch (await _authService.signIn(email: email, password: password)) {
 - Refresh request/response body: `AuthInterceptor._refresh()` and `AuthTokens.fromJson`.
 - Error message field: `serverMessage` in `dio_exception_mapper.dart`.
 - Auth payloads and error statuses: `AuthRepository` (`lib/features/auth/data/repositories/auth_repository.dart`).
+
+### Backend (Supabase)
+
+The backend is a Supabase project (free tier), used through [`supabase_flutter`](https://pub.dev/packages/supabase_flutter): `Supabase.initialize` in `main()` with `BASE_URL` and `PUBLISHABLE_KEY`, and a `NetworkClient` around the Supabase client passed to the repositories by `AppProvider`. The SDK stores the session (in `SecureSessionStorage`) and refreshes tokens. Row-level security keeps every user to their own rows, so queries carry no user filter. The schema and plan content live in the database; see the project docs `backend-decisions.md` and `backend-schema.sql`.
+
+Repositories never touch the Supabase client directly: they call `NetworkClient.request((db) => db.from(...))` (`lib/core/network/network_client.dart`), which returns a `Result` and maps the SDK's exceptions to `NetworkException`, `UnauthorizedException` or `ServerException`. Table and function names are in `lib/core/constants/supabase_names.dart`.
+
+| Where | Repositories | Service (a Cubit) | Owns |
+|---|---|---|---|
+| `features/auth` | `AuthRepository`, `GoogleSignInRepository` | `AuthService` (`AuthActivity`) | Google sign-in, session restore, sign out, account deletion |
+| `core/shared_features/session` | none | `SessionCubit` (`SessionState`) | The signed-in `User` and their `Profile` |
+| `features/profile` | `ProfileRepository` | `ProfileService` (`ProfileState`) | Onboarding, height and weight, weight history, feature toggles |
+| `features/home` | `PlanRepository`, `WorkoutRepository`, `WorkoutLocalRepository` | `PlanService` (`PlanState`), `WorkoutService` (`WorkoutState`), `HomeService` (`HomeState`) | The plan and exercise library, the workout in progress, saved workouts, Home summary (up next, stats, ratings, calendar) and the plan list |
+
+- **Sign-in is Google only.** `GoogleSignInRepository` returns Google's ID and access tokens, which `AuthRepository` passes to `auth.signInWithIdToken`. In Supabase, enable the Google provider with the web, iOS and Android client IDs under Authorized Client IDs, and turn on "Skip nonce checks" (the sign-in sends no nonce). `AuthService.deleteAccount()` asks for Google again, checks it is the same account, then calls the `delete_my_account` function.
+- **Onboarding.** `ProfileService.completeOnboarding` saves the profile and the first weight entry. `session.user.isOnboarded` is false until then. Gender cannot change afterwards (a database trigger).
+- **The plan.** `PlanService.planDay(n)` calls `my_plan_day`, which picks the track from the user's gender and handles all days (days 1 to 48 without equipment, 49 to 96 with a band, then a monthly progression). `summaryFor(n)` and `summaries()` give day names without exercises. Exercises can have no `gifUrl` yet (some band exercises).
+- **Which day is "Up next".** No day number is stored on a workout. `WorkoutHistory` replays the saved workouts by date: a completed workout moves to the next day, an incomplete one repeats its day. Up next is the number of completed workouts plus one.
+- **A workout.**
+  1. `begin(day)` when the first exercise starts (the warm-up is not counted), then `setSetsDone` and `goToExercise` as the user goes. Every change is saved on the device (`activeWorkout`).
+  2. `finish()` or `giveUp()` upload the workout and its exercises. Saving is an upsert, since there is one workout per user per date.
+  3. If the upload fails for a network or server reason, the workout is queued on the device (`pendingWorkouts`) and uploaded on the next `history()` or `syncPending()`. The call still succeeds with `FinishedWorkout.synced == false`.
+  4. After the app is killed, `restoreActiveWorkout()` returns the workout if the last ticked set was under 2 hours ago. Otherwise it is saved as incomplete, ending at the last tick. With no ticked set it is discarded.
+  5. `resumeIncomplete()` picks today's incomplete workout back up (the "Complete workout" button).
+- **Home.** `HomeService.load()` builds everything Home shows. Ratings count completed workouts only: this week is rated from Monday, all time is the average per week once a full week has passed. Great is 5 or more a week, Good is 3 or 4, Needs work is fewer.
+- **Sign out.** `AppProvider` resets the services when the session ends.
 
 ### Naming
 

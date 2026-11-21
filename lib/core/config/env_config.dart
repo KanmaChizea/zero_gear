@@ -29,6 +29,7 @@ class EnvConfig {
   }
 
   static String get baseUrl => dotenv.get(_baseUrlKey);
+  static String get publishableKey => dotenv.get(_publishableKey);
   static String get redirectUrl => dotenv.get(_redirectUrlKey);
   static String get googleWebClientId => dotenv.get(_googleWebClientIdKey);
   static String get googleIosClientId => dotenv.get(_googleIosClientIdKey);

@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../data/services/profile_service.dart';
+import 'package:zero_gear/features/profile/data/services/profile_service.dart';
 import '../models/profile_ui_state.dart';
 
 class ProfileViewModel extends Cubit<ProfileUiState> {

@@ -1,6 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'app_route.dart';
-import 'package:zero_gear/core/session/session_cubit.dart';
+import 'package:zero_gear/core/shared_features/session/data/services/session_cubit.dart';
 
 import 'auth_router.dart';
 import 'not_found_view.dart';

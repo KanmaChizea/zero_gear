@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:zero_gear/core/utils/result.dart';
 
 import '../../data/services/auth_service.dart';
 import '../models/login_ui_state.dart';
@@ -18,24 +17,5 @@ class LoginViewModel extends Cubit<LoginUiState> {
   Future<void> submit() async {
     if (!state.canSubmit) return;
     emit(state.copyWith(isSubmitting: true, errorMessage: () => null));
-
-    final result = await _authService.signIn(
-      email: state.email,
-      password: state.password,
-    );
-    if (isClosed) return;
-
-    switch (result) {
-      case Ok():
-        // The router leaves the login screen once the session starts.
-        emit(state.copyWith(isSubmitting: false));
-      case Error(:final error):
-        emit(
-          state.copyWith(
-            isSubmitting: false,
-            errorMessage: () => error.message,
-          ),
-        );
-    }
   }
 }

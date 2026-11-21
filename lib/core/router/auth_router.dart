@@ -1,5 +1,5 @@
 import 'package:go_router/go_router.dart';
-import 'package:zero_gear/core/session/session_cubit.dart';
+import 'package:zero_gear/core/shared_features/session/data/services/session_cubit.dart';
 import 'package:zero_gear/features/auth/ui/views/login_view.dart';
 import 'package:zero_gear/features/auth/ui/views/splash_view.dart';
 
