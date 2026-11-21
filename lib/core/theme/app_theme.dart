@@ -12,22 +12,28 @@ abstract final class AppTheme {
     required Brightness brightness,
     required AppColors colors,
   }) {
-    final isDark = brightness == Brightness.dark;
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
       scaffoldBackgroundColor: colors.background,
-      colorScheme: isDark
-          ? ColorScheme.dark(
-              primary: colors.primary,
-              surface: colors.background,
-              onSurface: colors.text,
-            )
-          : ColorScheme.light(
-              primary: colors.primary,
-              surface: colors.background,
-              onSurface: colors.text,
-            ),
+      colorScheme: ColorScheme(
+        brightness: brightness,
+        primary: colors.primary,
+        onPrimary: colors.onPrimary,
+        secondary: colors.success,
+        onSecondary: colors.onSuccess,
+        error: colors.primary,
+        onError: colors.onPrimary,
+        surface: colors.background,
+        onSurface: colors.text,
+        surfaceContainer: colors.surface,
+        surfaceContainerHighest: colors.surfaceVariant,
+        outline: colors.border,
+        outlineVariant: colors.border,
+        inverseSurface: colors.inverse,
+        onInverseSurface: colors.textInverse,
+      ),
+      dividerColor: colors.border,
       appBarTheme: AppBarTheme(
         backgroundColor: colors.background,
         foregroundColor: colors.text,

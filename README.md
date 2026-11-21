@@ -142,7 +142,7 @@ lib/
       local_storage.dart          # LocalStorage: shared_preferences wrapper for non-sensitive values
       secure_session_storage.dart # SecureSessionStorage: keeps the Supabase session in the Keychain / Keystore
     theme/
-      app_colors.dart             # AppColors: ThemeExtension with background, primary, text (light & dark)
+      app_colors.dart             # AppColors: ThemeExtension with the Figma color tokens (light & dark)
       app_spacing.dart            # AppSpacing: scaled SizedBox vertical/horizontal & EdgeInsets padding tokens
       app_text_styles.dart        # AppTextStyles: GoogleFonts body style + TextStyle.weight extension
       app_theme.dart              # AppTheme: ThemeData for light and dark modes
@@ -350,7 +350,7 @@ If a screen needs extra state alongside the list, keep the `PaginatedViewModel` 
 
 Theme configuration lives in `lib/core/theme/`:
 
-- `AppColors` (`lib/core/theme/app_colors.dart`): `ThemeExtension<AppColors>` defining the template color tokens (`background`, `primary`, `text`) for both light and dark modes.
+- `AppColors` (`lib/core/theme/app_colors.dart`): `ThemeExtension<AppColors>` with the Figma `Color` tokens for light and dark: `background`, `surface`, `surfaceVariant`, `inverse`, `text`, `textSecondary`, `textInverse`, `border`, `borderStrong`, `primary` (Ember) and `onPrimary`, `success` and `onSuccess`. `primary` and `success` are the same in both modes. Text on them is near black.
 - `AppTextStyles` (`lib/core/theme/app_text_styles.dart`): Base typography powered by `google_fonts` (`GoogleFonts.inter`). Exposes a single `body` text style for the template, alongside a `weight(FontWeight)` extension on `TextStyle` to rebuild styles with different font weights (e.g. `AppTextStyles.body.weight(FontWeight.bold)`).
 - `AppSpacing` (`lib/core/theme/app_spacing.dart`): Spacing tokens scaled with `ScaleUtil`: `SizedBox` vertical (`v4`-`v48`, scaled by height) and horizontal (`h4`-`h32`, scaled by width) gaps, plus `EdgeInsets` padding presets and helpers (`symmetricPadding`, `fromLTRB`, `only`) that scale horizontal values by width and vertical values by height. Tokens are getters, not `const`, because they depend on the screen size.
 - `AppText` (`lib/core/widgets/text/app_text.dart`): Reusable text widget with default theme typography and text color, accepting `style`, `color`, `textAlign`, `maxLines`, and `overflow`.
