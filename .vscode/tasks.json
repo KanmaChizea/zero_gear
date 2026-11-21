@@ -1,0 +1,112 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build: Android APK",
+      "detail": "flutter build apk --flavor <flavor> --<mode>",
+      "type": "shell",
+      "command": "flutter",
+      "args": ["build", "apk", "--flavor", "${input:flavor}", "--${input:mode}"],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Build: Android App Bundle",
+      "detail": "flutter build appbundle --flavor <flavor> --<mode>",
+      "type": "shell",
+      "command": "flutter",
+      "args": ["build", "appbundle", "--flavor", "${input:flavor}", "--${input:mode}"],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Build: iOS IPA",
+      "detail": "flutter build ipa --flavor <flavor> --<mode> (requires signing)",
+      "type": "shell",
+      "command": "flutter",
+      "args": ["build", "ipa", "--flavor", "${input:flavor}", "--${input:mode}"],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Build: iOS (no codesign)",
+      "detail": "flutter build ios --flavor <flavor> --<mode> --no-codesign",
+      "type": "shell",
+      "command": "flutter",
+      "args": ["build", "ios", "--flavor", "${input:flavor}", "--${input:mode}", "--no-codesign"],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Build: All platforms",
+      "detail": "APK, App Bundle and IPA for the chosen flavor and mode",
+      "dependsOrder": "sequence",
+      "dependsOn": ["Build: Android APK", "Build: Android App Bundle", "Build: iOS IPA"],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Flutter: Clean",
+      "type": "shell",
+      "command": "flutter clean && flutter pub get",
+      "problemMatcher": []
+    },
+    {
+      "label": "Rename app",
+      "detail": "dart run tool/rename.dart (leave a field blank to keep it)",
+      "type": "shell",
+      "command": "dart",
+      "args": ["run", "tool/rename.dart", "--name=${input:appName}", "--id=${input:appId}", "--package=${input:dartPackage}"],
+      "problemMatcher": []
+    },
+    {
+      "label": "New feature / screen",
+      "detail": "dart run tool/new_feature.dart <feature> --screen <screen>",
+      "type": "shell",
+      "command": "dart",
+      "args": ["run", "tool/new_feature.dart", "${input:featureName}", "--screen=${input:screenName}"],
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "flavor",
+      "type": "pickString",
+      "description": "Flavor",
+      "options": ["dev", "staging", "prod"],
+      "default": "dev"
+    },
+    {
+      "id": "mode",
+      "type": "pickString",
+      "description": "Build mode",
+      "options": ["release", "profile", "debug"],
+      "default": "release"
+    },
+    {
+      "id": "appName",
+      "type": "promptString",
+      "description": "App display name (flavor suffixes added automatically). Blank = keep."
+    },
+    {
+      "id": "appId",
+      "type": "promptString",
+      "description": "Application/bundle ID, e.g. com.acme.myapp. Blank = keep."
+    },
+    {
+      "id": "dartPackage",
+      "type": "promptString",
+      "description": "Dart package name, e.g. my_app. Blank = keep."
+    },
+    {
+      "id": "featureName",
+      "type": "promptString",
+      "description": "Feature name (lower_snake_case), e.g. user_profile"
+    },
+    {
+      "id": "screenName",
+      "type": "promptString",
+      "description": "Screen name (lower_snake_case). Blank = same as feature."
+    }
+  ]
+}
