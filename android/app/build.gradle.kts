@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.project_starter"
+    namespace = "com.zero.gear"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -16,7 +16,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.project_starter"
+        applicationId = "com.zero.gear"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -35,15 +35,15 @@ android {
         // Same applicationId across flavors; only the launcher name differs.
         create("dev") {
             dimension = "environment"
-            resValue("string", "app_name", "Project Starter Dev")
+            resValue("string", "app_name", "Zero Gear Dev")
         }
         create("staging") {
             dimension = "environment"
-            resValue("string", "app_name", "Project Starter Staging")
+            resValue("string", "app_name", "Zero Gear Staging")
         }
         create("prod") {
             dimension = "environment"
-            resValue("string", "app_name", "Project Starter")
+            resValue("string", "app_name", "Zero Gear")
         }
     }
 

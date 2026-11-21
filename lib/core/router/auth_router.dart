@@ -1,7 +1,7 @@
 import 'package:go_router/go_router.dart';
-import 'package:project_starter/core/session/session_cubit.dart';
-import 'package:project_starter/features/auth/ui/views/login_view.dart';
-import 'package:project_starter/features/auth/ui/views/splash_view.dart';
+import 'package:zero_gear/core/session/session_cubit.dart';
+import 'package:zero_gear/features/auth/ui/views/login_view.dart';
+import 'package:zero_gear/features/auth/ui/views/splash_view.dart';
 
 import 'app_route.dart';
 

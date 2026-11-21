@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:project_starter/core/theme/app_colors.dart';
-import 'package:project_starter/core/utils/scale_util.dart';
+import 'package:zero_gear/core/theme/app_colors.dart';
+import 'package:zero_gear/core/utils/scale_util.dart';
 
 class SvgIcon extends StatelessWidget {
   const SvgIcon(

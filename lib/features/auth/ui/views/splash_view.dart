@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:project_starter/core/config/flavor.dart';
+import 'package:zero_gear/core/config/flavor.dart';
 
 import '../../data/services/auth_service.dart';
 

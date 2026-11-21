@@ -1,7 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:project_starter/core/theme/app_colors.dart';
-import 'package:project_starter/core/theme/app_text_styles.dart';
+import 'package:zero_gear/core/theme/app_colors.dart';
+import 'package:zero_gear/core/theme/app_text_styles.dart';
 
 class AppTextSpan {
   const AppTextSpan(this.data, {this.style, this.color, this.onTap});

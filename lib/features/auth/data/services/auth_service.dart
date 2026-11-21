@@ -1,8 +1,8 @@
-import 'package:project_starter/core/network/network_exception.dart';
-import 'package:project_starter/core/session/session_cubit.dart';
-import 'package:project_starter/core/session/user.dart';
-import 'package:project_starter/core/utils/app_logger.dart';
-import 'package:project_starter/core/utils/result.dart';
+import 'package:zero_gear/core/network/network_exception.dart';
+import 'package:zero_gear/core/session/session_cubit.dart';
+import 'package:zero_gear/core/session/user.dart';
+import 'package:zero_gear/core/utils/app_logger.dart';
+import 'package:zero_gear/core/utils/result.dart';
 
 import '../repositories/auth_repository.dart';
 

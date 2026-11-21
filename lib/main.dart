@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:project_starter/core/config/env_config.dart';
-import 'package:project_starter/core/config/flavor.dart';
-import 'package:project_starter/core/network/dio_api_client.dart';
-import 'package:project_starter/core/router/app_router.dart';
-import 'package:project_starter/core/session/session_cubit.dart';
-import 'package:project_starter/core/storage/local_storage.dart';
-import 'package:project_starter/core/theme/app_theme.dart';
-import 'package:project_starter/core/theme/theme_cubit.dart';
-import 'package:project_starter/core/utils/scale_util.dart';
-import 'package:project_starter/provider.dart';
+import 'package:zero_gear/core/config/env_config.dart';
+import 'package:zero_gear/core/config/flavor.dart';
+import 'package:zero_gear/core/network/dio_api_client.dart';
+import 'package:zero_gear/core/router/app_router.dart';
+import 'package:zero_gear/core/session/session_cubit.dart';
+import 'package:zero_gear/core/storage/local_storage.dart';
+import 'package:zero_gear/core/theme/app_theme.dart';
+import 'package:zero_gear/core/theme/theme_cubit.dart';
+import 'package:zero_gear/core/utils/scale_util.dart';
+import 'package:zero_gear/provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

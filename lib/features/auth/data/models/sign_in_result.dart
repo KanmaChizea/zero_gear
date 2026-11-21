@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import 'package:project_starter/core/network/auth_tokens.dart';
-import 'package:project_starter/core/session/user.dart';
+import 'package:zero_gear/core/network/auth_tokens.dart';
+import 'package:zero_gear/core/session/user.dart';
 
 class SignInResult extends Equatable {
   const SignInResult({required this.tokens, required this.user});

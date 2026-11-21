@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/widgets.dart';
-import 'package:project_starter/core/constants/app_layout.dart';
+import 'package:zero_gear/core/constants/app_layout.dart';
 
 /// Centres [child] and stops it growing past [maxWidth], so screens don't
 /// stretch edge to edge on tablets. Narrower screens get no extra padding,

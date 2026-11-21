@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:project_starter/core/utils/scale_util.dart';
+import 'package:zero_gear/core/utils/scale_util.dart';
 
 abstract final class AppSpacing {
   static SizedBox get v4 => SizedBox(height: 4.h);

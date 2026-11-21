@@ -1,4 +1,4 @@
-import 'package:project_starter/core/network/api_client.dart';
+import 'package:zero_gear/core/network/api_client.dart';
 
 class HomeRepository {
   HomeRepository(this._api);

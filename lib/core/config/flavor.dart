@@ -1,9 +1,9 @@
 import 'package:flutter/services.dart';
 
 enum Flavor {
-  dev('Project Starter Dev'),
-  staging('Project Starter Staging'),
-  prod('Project Starter');
+  dev('Zero Gear Dev'),
+  staging('Zero Gear Staging'),
+  prod('Zero Gear');
 
   const Flavor(this.appName);
 

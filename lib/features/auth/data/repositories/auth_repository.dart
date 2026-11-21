@@ -1,8 +1,8 @@
-import 'package:project_starter/core/constants/endpoints.dart';
-import 'package:project_starter/core/network/api_client.dart';
-import 'package:project_starter/core/session/user.dart';
-import 'package:project_starter/core/utils/app_exception.dart';
-import 'package:project_starter/core/utils/result.dart';
+import 'package:zero_gear/core/constants/endpoints.dart';
+import 'package:zero_gear/core/network/api_client.dart';
+import 'package:zero_gear/core/session/user.dart';
+import 'package:zero_gear/core/utils/app_exception.dart';
+import 'package:zero_gear/core/utils/result.dart';
 
 import '../models/sign_in_result.dart';
 

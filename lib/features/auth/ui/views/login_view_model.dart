@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:project_starter/core/utils/result.dart';
+import 'package:zero_gear/core/utils/result.dart';
 
 import '../../data/services/auth_service.dart';
 import '../models/login_ui_state.dart';

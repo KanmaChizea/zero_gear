@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:project_starter/core/session/session_cubit.dart';
-import 'package:project_starter/features/auth/data/services/auth_service.dart';
+import 'package:zero_gear/core/session/session_cubit.dart';
+import 'package:zero_gear/features/auth/data/services/auth_service.dart';
 
 import '../../data/services/profile_service.dart';
 import '../models/profile_ui_state.dart';
