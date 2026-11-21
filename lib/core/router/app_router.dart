@@ -3,8 +3,8 @@ import 'app_route.dart';
 import 'package:zero_gear/core/shared_features/session/data/services/session_cubit.dart';
 
 import 'auth_router.dart';
+import 'feature_router.dart';
 import 'not_found_view.dart';
-import 'shell_router.dart';
 import 'stream_listenable.dart';
 
 GoRouter createAppRouter(SessionCubit session) {
@@ -16,7 +16,7 @@ GoRouter createAppRouter(SessionCubit session) {
     routes: [
       GoRoute(path: '/', redirect: (_, _) => AppRoute.home.path),
       ...authRoutes(),
-      shellRoute(),
+      ...featureRoutes(),
     ],
   );
 }

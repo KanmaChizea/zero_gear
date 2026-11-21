@@ -10,8 +10,6 @@ abstract final class AppLayout {
   /// Product and category grids, which add columns instead of stretching.
   static const double maxCatalogWidth = 1100;
 
-  static const double maxNavBarWidth = 480;
-
   /// The sign-in and sign-up forms on tablets.
   static const double maxAuthFormWidth = 480;
 }

@@ -84,7 +84,7 @@ Next: register the service in lib/provider.dart (AppProvider → MultiRepository
 
 Then make ${s.pascal}View reachable (README → Navigation → Adding a route):
   1. lib/core/router/app_route.dart   add AppRoute.${s.camel}
-  2. lib/core/router/shell_router.dart (tab) or auth_router.dart / app_router.dart (full screen):
+  2. lib/core/router/feature_router.dart (or auth_router.dart for auth screens):
      AppRoute.${s.camel}.toGoRoute((_) => const ${s.pascal}View())''');
 }
 

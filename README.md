@@ -109,15 +109,14 @@ lib/
     constants/
       endpoints.dart              # Endpoints: API paths (for ApiClient; the Supabase backend does not use it)
       supabase_names.dart         # Tables and Rpc: Supabase table and function names
-      app_layout.dart             # AppLayout: tablet breakpoint and max widths for content, catalog, nav bar, auth forms
+      app_layout.dart             # AppLayout: tablet breakpoint and max widths for content, catalog, auth forms
       app_svgs.dart               # AppSvgs: SVG asset paths (assets/svgs/)
       app_images.dart             # AppImages: image asset paths (assets/images/)
     router/
       app_route.dart              # AppRoute enum (name, path, isPublic)
       app_router.dart             # GoRouter: combines route groups, 404, root redirect
       auth_router.dart            # Auth routes (login, …) + auth redirect
-      shell_router.dart           # Tab shell (StatefulShellRoute) and its branches
-      app_shell.dart              # Bottom navigation bar for the tab branches (capped at AppLayout.maxNavBarWidth)
+      feature_router.dart         # Feature routes (home, profile and their nested screens)
       not_found_view.dart
       stream_listenable.dart      # Adapts a Cubit stream to GoRouter.refreshListenable
       navigation.dart             # popUntil / popUntilNamed for go_router
@@ -204,7 +203,7 @@ widgets  ui model    core/shared_features/session
 - Features never import other features, with one exception: any feature may use `AuthService` (auth underpins the whole app, e.g. Profile signs out through it). Anything else several features need lives in `core/` (e.g. `core/shared_features/session`, `core/router`).
 - Data used by more than one feature (repositories, services and models) lives in `core/shared_features/<name>/data/`, laid out like a feature's `data/` folder. Features import it from there. Shared features never import features, and never import each other, except that any of them may use `session`. A feature that combines shared services into one screen's data keeps that service in its own `data/` (e.g. `HomeService`).
 - Services are Cubits: `class ProfileService extends Cubit<ProfileState>`. The state is the data the service is the source of truth for, so view models can listen to it, and the methods that load or change data return a `Result`. `AppProvider` provides each one with `BlocProvider`, and `clearAll` resets them when the user signs out.
-- `core/` doesn't import from `features/`, with one exception: the route tables in `core/router/` (`auth_router.dart`, `shell_router.dart`) import feature views to register them.
+- `core/` doesn't import from `features/`, with one exception: the route tables in `core/router/` (`auth_router.dart`, `feature_router.dart`) import feature views to register them.
 - Widgets get state and callbacks via constructors; they don't talk to view models.
 - One-off effects (navigation, snackbars) go in a `BlocListener` in the view, not in `build`.
 - Imports outside the current feature use `package:` imports; relative imports only within a feature.
@@ -215,22 +214,25 @@ widgets  ui model    core/shared_features/session
 
 - `app_router.dart` creates the `GoRouter` and combines the route groups.
 - `auth_router.dart` holds the public auth routes and the auth redirect.
-- `shell_router.dart` holds the tab shell; each tab is a branch.
+- `feature_router.dart` holds the feature routes; screens of a flow are nested under their parent.
 
 | Route | Path | Notes |
 |---|---|---|
 | `splash` | `/splash` | Public. Initial route; resolves the session, then leaves. |
-| `login` | `/login` | Public. Outside the tab shell. |
-| `home` | `/home` | Tab 1 |
-| `itemDetail` | `/home/items/:id` | Inside the home tab; `id` must be a positive integer |
-| `profile` | `/profile` | Tab 2 |
+| `login` | `/login` | Public. |
+| `home` | `/home` | |
+| `stretchOffer`, `activeStretch`, `activeWorkout`, `workoutComplete` | `/home/stretch-offer`, `/home/active-stretch`, `/home/active-workout`, `/home/workout-complete` | Nested under `home` |
+| `profile` | `/profile` | |
+| `profileInfo`, `updateHeightWeight`, `weightChart`, `appearance`, `deleteAccount`, `onboardingIntro`, `onboarding`, `onboardingComplete` | `/profile/profile-info`, `/profile/update-height-weight`, `/profile/weight-chart`, `/profile/appearance`, `/profile/delete-account`, `/profile/onboarding-intro`, `/profile/onboarding`, `/profile/onboarding-complete` | Nested under `profile` |
+| `confirmDelete` | `/profile/delete-account/confirm-delete` | Nested under `deleteAccount` |
+| `accountDeleted` | `/account-deleted` | Public: the session is already gone when it shows. |
 
 - **Routes** are declared once in the `AppRoute` enum (`lib/core/router/app_route.dart`): the enum name is the route name, plus its path and whether it is public.
 - **Navigate by name** using the enum, never raw path strings:
 
   ```dart
   context.goNamed(AppRoute.home.name);
-  context.pushNamed(AppRoute.itemDetail.name, pathParameters: {'id': '$id'});
+  context.pushNamed(AppRoute.stretchOffer.name);
   ```
 
 - **Pop until** a page further down the stack (`lib/core/router/navigation.dart`), mirroring `go` / `goNamed`:
@@ -240,8 +242,7 @@ widgets  ui model    core/shared_features/session
   context.popUntil('/home');                   // by location
   ```
 
-  Works inside tabs, from dialogs and with pushed routes, and keeps go_router's location in sync (unlike `Navigator.popUntil`). Does nothing if the target is not in the stack (asserts in debug). If a route on the way has an `onExit` (e.g. an "unsaved changes?" dialog), it stops there; call it again after the user confirms.
-- **Tabs** use `StatefulShellRoute.indexedStack`: each tab keeps its own stack and state. Tapping the active tab pops it back to its root.
+  Works from dialogs and with pushed routes, and keeps go_router's location in sync (unlike `Navigator.popUntil`). Does nothing if the target is not in the stack (asserts in debug). If a route on the way has an `onExit` (e.g. an "unsaved changes?" dialog), it stops there; call it again after the user confirms.
 - **Splash and session restore**: the session starts as `unknown`. Until it is resolved, every location redirects to `/splash` (keeping the original in `?from=`). `SplashView` calls `AuthService.restoreSession()`, which starts the session from the one the Supabase SDK restored (see **Session and storage**). Once resolved, the splash redirects to `from` / `/home` if signed in, otherwise to `/login` (still carrying `from`).
 - **Auth redirect**: the router refreshes on every `SessionCubit` change (via `StreamListenable`). Signed out, any non-public route goes to `/login?from=<where you were going>`; after sign-in the user lands on `from` (only if it is an in-app path), otherwise `/home`. Signing out (`AuthService.signOut()`) calls `/auth/logout`, clears the session and returns to login. Views never navigate after restore/sign-in/sign-out themselves.
 - **Argument protection**: path parameters are constrained in the path pattern (`items/:id([1-9]\d*)`), so a malformed deep link such as `/home/items/abc` never matches and shows the 404 page. Builders can then parse safely. Pass IDs, not objects: `extra` is lost on deep links and app restarts.
@@ -250,8 +251,7 @@ widgets  ui model    core/shared_features/session
 #### Adding a route
 
 1. Add it to `AppRoute` (relative `path` if nested; constrain parameters with a regex).
-2. Register it with `AppRoute.x.toGoRoute((state) => XView(...))`: in `shell_router.dart` under the right branch for a tab screen, in `auth_router.dart` for auth screens, or in `app_router.dart` for other full-screen routes.
-3. A new tab also needs a `StatefulShellBranch` in `shell_router.dart` and a destination in `app_shell.dart` (same order).
+2. Register it with `AppRoute.x.toGoRoute((state) => XView(...))`: in `feature_router.dart` (under its parent's `routes` if nested) or in `auth_router.dart` for auth screens.
 
 ### State management
 
@@ -355,7 +355,7 @@ Theme configuration lives in `lib/core/theme/`:
 - `AppSpacing` (`lib/core/theme/app_spacing.dart`): Spacing tokens scaled with `ScaleUtil`: `SizedBox` vertical (`v4`-`v48`, scaled by height) and horizontal (`h4`-`h32`, scaled by width) gaps, plus `EdgeInsets` padding presets and helpers (`symmetricPadding`, `fromLTRB`, `only`) that scale horizontal values by width and vertical values by height. Tokens are getters, not `const`, because they depend on the screen size.
 - `AppText` (`lib/core/widgets/text/app_text.dart`): Reusable text widget with default theme typography and text color, accepting `style`, `color`, `textAlign`, `maxLines`, and `overflow`.
 - `ScaleUtil` (`lib/core/utils/scale_util.dart`): Scales design sizes to the current screen. Initialized in `main()` with the design frame (default `375 x 812`); pass `designWidth` / `designHeight` to `ScaleUtil.init` if your designs use a different frame. Use `ScaleUtil.w(...)` for widths, icons and horizontal padding, `ScaleUtil.h(...)` for heights and vertical spacing, and `ScaleUtil.sp(...)` for font sizes (dampened so text scales less than layout). Factors use the screen's shortest side for widths and longest side for heights, so they don't change with orientation, and are capped at `1.2` so phones scale exactly as designed while tablets don't render everything twice as large. They are first computed at startup in `main()`; `App` in `lib/main.dart` calls `ScaleUtil.update(MediaQuery.sizeOf(context))` from `MaterialApp.router`'s `builder`, so they are recalculated whenever the window size changes (rotation, iPad split view). Also exposes `num` extensions (`16.w`, `16.h`, `14.sp`, `8.r`, where `r` scales by width), which `AppSpacing` uses.
-- `AppLayout` (`lib/core/constants/app_layout.dart`): Tablet layout constants: `tabletBreakpoint` (600), and max widths for text-heavy screens (`maxContentWidth`), grids (`maxCatalogWidth`), the bottom navigation bar (`maxNavBarWidth`) and auth forms (`maxAuthFormWidth`). All are wider than a phone, so phones are unaffected. `AppShell` caps the tab bar at `maxNavBarWidth` and centres it on tablets.
+- `AppLayout` (`lib/core/constants/app_layout.dart`): Tablet layout constants: `tabletBreakpoint` (600), and max widths for text-heavy screens (`maxContentWidth`), grids (`maxCatalogWidth`), and auth forms (`maxAuthFormWidth`). All are wider than a phone, so phones are unaffected.
 - `ContentWidth` (`lib/core/widgets/containers/content_width.dart`): Centres its `child` and stops it growing past `maxWidth` (default `AppLayout.maxContentWidth`) by adding horizontal inset on wider screens. Narrower screens get no extra padding. Wrap a screen body in it, e.g. `ContentWidth(child: ListView(...))`, or pass another width such as `AppLayout.maxAuthFormWidth`.
 - `AppRichText` (`lib/core/widgets/text/app_rich_text.dart`): Renders a list of `AppTextSpan`s in one paragraph, with the same arguments as `AppText` (`style`, `color`, `textAlign`, `maxLines`, `overflow`) and the same defaults. Each `AppTextSpan` takes its text plus an optional `style` (merged over the parent style), `color` and `onTap` (tap recognizers are created and disposed by the widget).
 - `SvgIcon` (`lib/core/widgets/icons/svg_icon.dart`): Renders an SVG asset with `flutter_svg`, e.g. `SvgIcon(AppSvgs.arrowBack, size: 24)`. Tinted with `context.colors.text` by default (override with `color`, or pass `keepOriginalColors: true` to render the SVG's own colors, e.g. for logos); `size` is a design value scaled by width so the icon stays square.

@@ -10,8 +10,7 @@ import '../models/weight_summary.dart';
 import '../repositories/profile_repository.dart';
 
 class ProfileService extends Cubit<ProfileState> {
-  ProfileService(this._repository, this._session)
-    : super(const ProfileState());
+  ProfileService(this._repository, this._session) : super(const ProfileState());
 
   final ProfileRepository _repository;
   final SessionCubit _session;

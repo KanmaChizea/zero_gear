@@ -6,8 +6,22 @@ import 'package:go_router/go_router.dart';
 enum AppRoute {
   splash('/splash', isPublic: true),
   login('/login', isPublic: true),
+  accountDeleted('/account-deleted', isPublic: true),
   home('/home'),
-  profile('/profile');
+  stretchOffer('stretch-offer'),
+  activeStretch('active-stretch'),
+  activeWorkout('active-workout'),
+  workoutComplete('workout-complete'),
+  profile('/profile'),
+  profileInfo('profile-info'),
+  updateHeightWeight('update-height-weight'),
+  weightChart('weight-chart'),
+  appearance('appearance'),
+  deleteAccount('delete-account'),
+  confirmDelete('confirm-delete'),
+  onboardingIntro('onboarding-intro'),
+  onboarding('onboarding'),
+  onboardingComplete('onboarding-complete');
 
   const AppRoute(this.path, {this.isPublic = false});
 
