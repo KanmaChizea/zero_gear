@@ -163,7 +163,7 @@ class _ErrorRetry extends StatelessWidget {
         AppText(message, textAlign: TextAlign.center),
         TextButton(
           onPressed: onRetry,
-          child: AppText('Retry', color: context.colors.primary),
+          child: AppText('Retry', color: context.colors.accentPrimary),
         ),
       ],
     );

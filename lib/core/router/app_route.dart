@@ -1,6 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
+export 'package:go_router/go_router.dart';
+
 /// Every route in the app. [name] is the enum name; [path] is relative for
 /// nested routes. Navigate by name: `context.goNamed(AppRoute.home.name)`.
 enum AppRoute {

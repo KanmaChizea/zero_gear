@@ -23,7 +23,7 @@ class AppText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final baseStyle = style ?? AppTextStyles.body;
-    final resolvedColor = color ?? context.colors.text;
+    final resolvedColor = color ?? context.colors.textPrimary;
 
     return Text(
       data,

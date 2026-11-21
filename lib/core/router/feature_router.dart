@@ -1,4 +1,3 @@
-import 'package:go_router/go_router.dart';
 import 'package:zero_gear/features/home/ui/views/active_stretch/active_stretch_view.dart';
 import 'package:zero_gear/features/home/ui/views/active_workout/active_workout_view.dart';
 import 'package:zero_gear/features/home/ui/views/home_view.dart';
@@ -9,8 +8,8 @@ import 'package:zero_gear/features/profile/ui/views/appearance/appearance_view.d
 import 'package:zero_gear/features/profile/ui/views/confirm_delete/confirm_delete_view.dart';
 import 'package:zero_gear/features/profile/ui/views/delete_account/delete_account_view.dart';
 import 'package:zero_gear/features/profile/ui/views/onboarding/onboarding_view.dart';
-import 'package:zero_gear/features/profile/ui/views/onboarding_complete/onboarding_complete_view.dart';
-import 'package:zero_gear/features/profile/ui/views/onboarding_intro/onboarding_intro_view.dart';
+import 'package:zero_gear/features/profile/ui/views/onboarding/onboarding_complete_view.dart';
+import 'package:zero_gear/features/profile/ui/views/onboarding/onboarding_intro_view.dart';
 import 'package:zero_gear/features/profile/ui/views/profile_info/profile_info_view.dart';
 import 'package:zero_gear/features/profile/ui/views/profile_view.dart';
 import 'package:zero_gear/features/profile/ui/views/update_height_weight/update_height_weight_view.dart';

@@ -45,23 +45,10 @@ class _LoginBody extends StatelessWidget {
         }
       },
       child: AppScreen(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        footer: Column(
+          spacing: 24,
           children: [
-            const AppLogo(),
-            AppSpacing.v24,
-            AppText(
-              'Train at home. No equipment needed.',
-              style: AppTextStyles.display,
-            ),
-            AppSpacing.v8,
-            AppText(
-              'Create an account and we will build a weekly plan around you.',
-              color: context.colors.textSecondary,
-            ),
-            const Spacer(),
             Button(label: 'Continue with Google', onPressed: viewModel.submit),
-            AppSpacing.v24,
             Center(
               child: AppText(
                 'By continuing you agree to the Terms and Privacy Policy.',
@@ -72,6 +59,19 @@ class _LoginBody extends StatelessWidget {
             ),
           ],
         ),
+        children: [
+          const AppLogo(),
+          AppSpacing.v24,
+          AppText(
+            'Train at home. No equipment needed.',
+            style: AppTextStyles.display,
+          ),
+          AppSpacing.v8,
+          AppText(
+            'Create an account and we will build a weekly plan around you.',
+            color: context.colors.textSecondary,
+          ),
+        ],
       ),
     );
   }

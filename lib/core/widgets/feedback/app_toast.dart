@@ -11,7 +11,7 @@ enum ToastType {
   Color getBgColor(BuildContext context) {
     switch (this) {
       case ToastType.success:
-        return context.colors.success;
+        return context.colors.successPrimary;
       case ToastType.error:
         return context.colors.error;
     }
@@ -20,7 +20,7 @@ enum ToastType {
   Color getFgColor(BuildContext context) {
     switch (this) {
       case ToastType.success:
-        return context.colors.onSuccess;
+        return context.colors.successOn;
       case ToastType.error:
         return context.colors.onError;
     }
@@ -29,7 +29,7 @@ enum ToastType {
   Color getSolidColor(BuildContext context) {
     switch (this) {
       case ToastType.success:
-        return context.colors.success;
+        return context.colors.successPrimary;
       case ToastType.error:
         return context.colors.error;
     }

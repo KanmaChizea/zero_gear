@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:zero_gear/core/constants/app_svgs.dart';
+import 'package:zero_gear/core/theme/theme.dart';
+import 'package:zero_gear/core/widgets/buttons/button.dart';
+import 'package:zero_gear/core/widgets/containers/app_screen.dart';
+import 'package:zero_gear/core/widgets/icons/svg_icon.dart';
+import 'package:zero_gear/core/widgets/text/app_text.dart';
+
 import 'app_route.dart';
 
 class NotFoundView extends StatelessWidget {
@@ -7,31 +13,31 @@ class NotFoundView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final colors = context.colors;
 
-    return Scaffold(
-      appBar: AppBar(),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Page not found', style: theme.textTheme.headlineSmall),
-              const SizedBox(height: 8),
-              const Text(
-                'The page you are looking for does not exist.',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: () => context.goNamed(AppRoute.home.name),
-                child: const Text('Go home'),
-              ),
-            ],
-          ),
+    return AppScreen(
+      children: [
+        const Spacer(),
+        const SvgIcon(AppSvgs.sadBadge, size: 96, keepOriginalColors: true),
+        AppSpacing.v24,
+        AppText(
+          'Page not found',
+          style: AppTextStyles.title,
+          textAlign: TextAlign.center,
         ),
-      ),
+        AppSpacing.v8,
+        AppText(
+          'The page you are looking for does not exist.',
+          color: colors.textSecondary,
+          textAlign: TextAlign.center,
+        ),
+        const Spacer(),
+        Button(
+          label: 'Go home',
+          onPressed: () => context.goNamed(AppRoute.home.name),
+        ),
+        AppSpacing.v16,
+      ],
     );
   }
 }

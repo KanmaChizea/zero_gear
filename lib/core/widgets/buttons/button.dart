@@ -98,13 +98,13 @@ class Button extends StatelessWidget {
   Color _background(AppColors colors) {
     if (!enabled) {
       return variant == ButtonVariant.filled
-          ? colors.surfaceVariant
+          ? colors.bgTertiary
           : Colors.transparent;
     }
     return backgroundColor ??
         switch (variant) {
-          ButtonVariant.filled => colors.primary,
-          ButtonVariant.outlined => colors.background,
+          ButtonVariant.filled => colors.accentPrimary,
+          ButtonVariant.outlined => colors.bgPrimary,
           ButtonVariant.text => Colors.transparent,
         };
   }
@@ -113,15 +113,15 @@ class Button extends StatelessWidget {
     if (!enabled) return colors.textSecondary;
     return foregroundColor ??
         switch (variant) {
-          ButtonVariant.filled => colors.onPrimary,
-          ButtonVariant.outlined || ButtonVariant.text => colors.text,
+          ButtonVariant.filled => colors.accentOn,
+          ButtonVariant.outlined || ButtonVariant.text => colors.textPrimary,
         };
   }
 
   BorderSide _border(AppColors colors) {
     if (variant != ButtonVariant.outlined) return BorderSide.none;
     return BorderSide(
-      color: enabled ? foregroundColor ?? colors.borderStrong : colors.border,
+      color: enabled ? foregroundColor ?? colors.borderStrong : colors.borderDefault,
       width: 1.5,
     );
   }

@@ -74,7 +74,7 @@ class _AppRichTextState extends State<AppRichText> {
   @override
   Widget build(BuildContext context) {
     final baseStyle = widget.style ?? AppTextStyles.body;
-    final resolvedColor = widget.color ?? context.colors.text;
+    final resolvedColor = widget.color ?? context.colors.textPrimary;
 
     return Text.rich(
       TextSpan(

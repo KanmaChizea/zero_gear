@@ -41,8 +41,8 @@ class _LoaderScreen extends StatelessWidget {
 
     return ColoredBox(
       color: isDark
-          ? context.colors.surface.withValues(alpha: 0.72)
-          : context.colors.text.withValues(alpha: 0.4),
+          ? context.colors.bgSecondary.withValues(alpha: 0.72)
+          : context.colors.textPrimary.withValues(alpha: 0.4),
       child: const Center(child: LoaderMark()),
     );
   }
@@ -92,7 +92,7 @@ class _LoaderMarkState extends State<LoaderMark>
         children: [
           SvgPicture.asset(
             AppSvgs.logoRing,
-            colorFilter: ColorFilter.mode(context.colors.text, BlendMode.srcIn),
+            colorFilter: ColorFilter.mode(context.colors.textPrimary, BlendMode.srcIn),
           ),
           RotationTransition(
             turns: _controller,
