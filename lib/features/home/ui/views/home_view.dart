@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zero_gear/core/constants/app_svgs.dart';
+import 'package:zero_gear/core/router/app_route.dart';
+import 'package:zero_gear/core/theme/theme.dart';
+import 'package:zero_gear/core/utils/scale_util.dart';
+import 'package:zero_gear/core/widgets/containers/app_screen.dart';
+import 'package:zero_gear/core/widgets/icons/app_logo.dart';
+import 'package:zero_gear/core/widgets/icons/svg_icon.dart';
 
 import '../../data/services/home_service.dart';
 import '../models/home_ui_state.dart';
@@ -23,16 +30,35 @@ class _HomeBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Home')),
-      body: BlocBuilder<HomeViewModel, HomeUiState>(
-        builder: (context, state) {
-          if (state.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          return Container();
-        },
-      ),
+    return BlocBuilder<HomeViewModel, HomeUiState>(
+      builder: (context, state) {
+        return AppScreen(
+          header: Row(
+            spacing: 24,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              AppLogo(size: 36, style: AppTextStyles.heading),
+              GestureDetector(
+                onTap: () => context.pushNamed(AppRoute.profile.name),
+                child: Container(
+                  height: 40.h,
+                  width: 40.h,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: context.colors.bgTertiary,
+                  ),
+                  child: SvgIcon(
+                    AppSvgs.avatar,
+                    color: context.colors.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          children: [],
+        );
+      },
     );
   }
 }

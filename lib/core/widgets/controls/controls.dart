@@ -1,1 +1,1 @@
-// Barrel export for control widgets.
+export 'switch.dart';

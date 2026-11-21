@@ -22,6 +22,7 @@ class AppScreen extends StatelessWidget {
           padding: AppSpacing.screenPadding,
           child: Column(
             spacing: 24.h,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ?header,
               if (scrollable)
