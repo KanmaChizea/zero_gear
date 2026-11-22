@@ -19,8 +19,8 @@ class ProfileItem {
 }
 
 class ProfileSection extends StatelessWidget {
-  const ProfileSection({super.key, required this.title, required this.items});
-  final String title;
+  const ProfileSection({super.key, this.title, required this.items});
+  final String? title;
   final List<ProfileItem> items;
   @override
   Widget build(BuildContext context) {
@@ -28,11 +28,12 @@ class ProfileSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       spacing: 16.h,
       children: [
-        AppText(
-          title,
-          style: AppTextStyles.label,
-          color: context.colors.textSecondary,
-        ),
+        if (title != null)
+          AppText(
+            title!,
+            style: AppTextStyles.label,
+            color: context.colors.textSecondary,
+          ),
         Container(
           padding: AppSpacing.symmetricPadding(horizontal: 16),
           decoration: BoxDecoration(

@@ -121,7 +121,9 @@ class Button extends StatelessWidget {
   BorderSide _border(AppColors colors) {
     if (variant != ButtonVariant.outlined) return BorderSide.none;
     return BorderSide(
-      color: enabled ? foregroundColor ?? colors.borderStrong : colors.borderDefault,
+      color: enabled
+          ? foregroundColor ?? colors.borderStrong
+          : colors.borderDefault,
       width: 1.5,
     );
   }

@@ -92,7 +92,10 @@ class _LoaderMarkState extends State<LoaderMark>
         children: [
           SvgPicture.asset(
             AppSvgs.logoRing,
-            colorFilter: ColorFilter.mode(context.colors.textPrimary, BlendMode.srcIn),
+            colorFilter: ColorFilter.mode(
+              context.colors.textPrimary,
+              BlendMode.srcIn,
+            ),
           ),
           RotationTransition(
             turns: _controller,

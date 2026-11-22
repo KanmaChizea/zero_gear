@@ -26,12 +26,8 @@ class User extends Equatable {
 
   bool get isOnboarded => profile != null;
 
-  User withProfile(Profile? profile) => User(
-    id: id,
-    email: email,
-    displayName: displayName,
-    profile: profile,
-  );
+  User withProfile(Profile? profile) =>
+      User(id: id, email: email, displayName: displayName, profile: profile);
 
   Map<String, Object?> toJson() => {
     'id': id,

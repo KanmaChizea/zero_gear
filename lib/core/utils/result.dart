@@ -34,9 +34,7 @@ extension ResultX<T> on Result<T> {
       };
 
   /// Runs [next] with the value, or passes the error through.
-  Future<Result<R>> andThen<R>(
-    Future<Result<R>> Function(T value) next,
-  ) async {
+  Future<Result<R>> andThen<R>(Future<Result<R>> Function(T value) next) async {
     switch (this) {
       case Ok(:final value):
         return next(value);

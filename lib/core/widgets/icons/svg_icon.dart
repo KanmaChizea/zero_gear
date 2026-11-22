@@ -25,7 +25,10 @@ class SvgIcon extends StatelessWidget {
       height: size?.r,
       colorFilter: keepOriginalColors
           ? null
-          : ColorFilter.mode(color ?? context.colors.textPrimary, BlendMode.srcIn),
+          : ColorFilter.mode(
+              color ?? context.colors.textPrimary,
+              BlendMode.srcIn,
+            ),
     );
   }
 }

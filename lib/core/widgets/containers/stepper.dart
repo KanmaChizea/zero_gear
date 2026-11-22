@@ -1,7 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:zero_gear/core/theme/theme.dart';
 import 'package:zero_gear/core/utils/scale_util.dart';
-import 'package:zero_gear/core/widgets/buttons/app_back_button.dart';
 
 class AppStepper extends StatelessWidget {
   const AppStepper({

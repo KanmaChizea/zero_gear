@@ -4,7 +4,6 @@ import 'package:zero_gear/core/constants/app_svgs.dart';
 import 'package:zero_gear/core/extensions/string_extensions.dart';
 import 'package:zero_gear/core/router/app_route.dart';
 import 'package:zero_gear/core/shared_features/session/data/services/session_cubit.dart';
-import 'package:zero_gear/core/theme/app_spacing.dart';
 import 'package:zero_gear/core/theme/theme.dart';
 import 'package:zero_gear/core/theme/theme_cubit.dart';
 import 'package:zero_gear/core/utils/scale_util.dart';
@@ -86,7 +85,7 @@ class _ProfileBody extends StatelessWidget {
               ProfileItem(
                 label: 'Pre-workout stretch',
                 subLabel: 'Offer a short warm-up before each workout',
-                trailing: AppSwitch(value: user!.profile!.preWorkoutStretch),
+                trailing: AppSwitch(value: user.profile!.preWorkoutStretch),
                 onPressed: () => viewModel.setPreWorkOutStretch(
                   !user.profile!.preWorkoutStretch,
                 ),
