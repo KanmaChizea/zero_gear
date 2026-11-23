@@ -32,7 +32,12 @@ List<RouteBase> featureRoutes() => [
           day: int.parse(state.pathParameters['day']!),
         ),
       ),
-      AppRoute.activeStretch.toGoRoute((_) => const ActiveStretchView()),
+      AppRoute.activeStretch.toGoRoute(
+        (state) => ActiveStretchView(
+          phase: DayPhase.values.byName(state.pathParameters['phase']!),
+          day: int.parse(state.pathParameters['day']!),
+        ),
+      ),
       AppRoute.activeWorkout.toGoRoute((_) => const ActiveWorkoutView()),
       AppRoute.workoutComplete.toGoRoute((_) => const WorkoutCompleteView()),
       AppRoute.dayDetail.toGoRoute(

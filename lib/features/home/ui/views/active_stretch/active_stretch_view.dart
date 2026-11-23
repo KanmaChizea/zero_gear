@@ -1,38 +1,240 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zero_gear/core/router/app_route.dart';
+import 'package:zero_gear/core/theme/theme.dart';
+import 'package:zero_gear/core/utils/scale_util.dart';
+import 'package:zero_gear/core/widgets/buttons/app_back_button.dart';
+import 'package:zero_gear/core/widgets/buttons/button.dart';
+import 'package:zero_gear/core/widgets/containers/app_card.dart';
+import 'package:zero_gear/core/widgets/containers/app_screen.dart';
+import 'package:zero_gear/core/widgets/containers/stepper.dart';
+import 'package:zero_gear/core/widgets/feedback/app_toast.dart';
+import 'package:zero_gear/core/widgets/feedback/error_view.dart';
+import 'package:zero_gear/core/widgets/text/app_text.dart';
 
-import '../../../data/services/home_service.dart';
+import '../../../data/models/plan_enums.dart';
+import '../../../data/models/plan_exercise.dart';
+import '../../../data/services/plan_service.dart';
+import '../../../data/services/workout_service.dart';
 import '../../models/active_stretch_ui_state.dart';
+import '../../widgets/exercise/exercise_gif.dart';
 import 'active_stretch_view_model.dart';
 
 class ActiveStretchView extends StatelessWidget {
-  const ActiveStretchView({super.key});
+  const ActiveStretchView({super.key, required this.phase, required this.day});
+
+  final DayPhase phase;
+  final int day;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) =>
-          ActiveStretchViewModel(homeService: context.read<HomeService>()),
+      create: (context) => ActiveStretchViewModel(
+        planService: context.read<PlanService>(),
+        workoutService: context.read<WorkoutService>(),
+        phase: phase,
+        day: day,
+      ),
       child: const _ActiveStretchBody(),
     );
   }
 }
 
-class _ActiveStretchBody extends StatelessWidget {
+class _ActiveStretchBody extends StatefulWidget {
   const _ActiveStretchBody();
 
   @override
+  State<_ActiveStretchBody> createState() => _ActiveStretchBodyState();
+}
+
+class _ActiveStretchBodyState extends State<_ActiveStretchBody> {
+  final _pages = PageController();
+
+  @override
+  void dispose() {
+    _pages.dispose();
+    super.dispose();
+  }
+
+  void _previous() => _pages.previousPage(
+    duration: const Duration(milliseconds: 300),
+    curve: Curves.easeOutCubic,
+  );
+
+  void _next() => _pages.nextPage(
+    duration: const Duration(milliseconds: 300),
+    curve: Curves.easeOutCubic,
+  );
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Active Stretch')),
-      body: BlocBuilder<ActiveStretchViewModel, ActiveStretchUiState>(
-        builder: (context, state) {
-          if (state.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          return const Center(child: Text('Active Stretch'));
-        },
-      ),
+    final viewModel = context.read<ActiveStretchViewModel>();
+    final isWarmUp = viewModel.isWarmUp;
+    final noun = isWarmUp ? 'warm-up' : 'cool-down';
+
+    Future<void> finish() async {
+      final proceed = await viewModel.finish();
+      if (!proceed || !context.mounted) return;
+      if (isWarmUp) {
+        context.pushReplacementNamed(AppRoute.activeWorkout.name);
+      } else {
+        context.goNamed(AppRoute.home.name);
+      }
+    }
+
+    return BlocConsumer<ActiveStretchViewModel, ActiveStretchUiState>(
+      listenWhen: (previous, current) =>
+          previous.errorMessage != current.errorMessage,
+      listener: (context, state) {
+        if (state.errorMessage == null) return;
+        viewModel.clearError();
+        AppToast.error(context, title: state.errorMessage!);
+      },
+      builder: (context, state) {
+        final stretch = state.current;
+        return PopScope(
+          canPop: state.index == 0,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop) _previous();
+          },
+          child: AppScreen(
+            header: Column(
+              spacing: 16.h,
+              children: [
+                Row(
+                  spacing: 16.w,
+                  children: [
+                    AppBackButton(
+                      onPress: state.index > 0 ? _previous : context.pop,
+                    ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AppText(
+                            isWarmUp ? 'Warm-up' : 'Cool-down',
+                            style: AppTextStyles.caption,
+                            color: context.colors.textSecondary,
+                          ),
+                          if (stretch != null)
+                            AppText(
+                              'Stretch ${state.index + 1} of ${state.items.length}',
+                              style: AppTextStyles.bodyMedium,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                if (stretch != null)
+                  AppStepper(
+                    currentIndex: state.index,
+                    length: state.items.length,
+                  ),
+              ],
+            ),
+            footer: stretch == null
+                ? null
+                : Padding(
+                    padding: EdgeInsets.only(bottom: 16.h),
+                    child: Column(
+                      spacing: 8.h,
+                      children: [
+                        Button(
+                          label: !state.isLast
+                              ? 'Next stretch'
+                              : isWarmUp
+                              ? 'Start workout'
+                              : 'Done',
+                          isLoading: state.isLast && state.isFinishing,
+                          onPressed: state.isLast ? finish : _next,
+                        ),
+                        if (!state.isLast)
+                          Button(
+                            label: 'Skip $noun',
+                            variant: ButtonVariant.text,
+                            isLoading: state.isFinishing,
+                            onPressed: finish,
+                          ),
+                      ],
+                    ),
+                  ),
+            scrollable: false,
+            children: [
+              Expanded(
+                child: state.stretches.when(
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  data: (stretches) => PageView.builder(
+                    controller: _pages,
+                    physics: const NeverScrollableScrollPhysics(),
+                    onPageChanged: viewModel.onPageChanged,
+                    itemCount: stretches.length,
+                    itemBuilder: (context, index) => SingleChildScrollView(
+                      child: _StretchBody(
+                        stretch: stretches[index],
+                        isWarmUp: isWarmUp,
+                      ),
+                    ),
+                  ),
+                  error: (error) => ErrorView(
+                    title: 'Could not load the $noun',
+                    text: error,
+                    onRetry: viewModel.initialize,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _StretchBody extends StatelessWidget {
+  const _StretchBody({required this.stretch, required this.isWarmUp});
+
+  final PlanExercise stretch;
+  final bool isWarmUp;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final exercise = stretch.exercise;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: 24.h,
+      children: [
+        ExerciseGif(url: exercise.gifUrl),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 4.h,
+          children: [
+            AppText(exercise.name, style: AppTextStyles.display),
+            AppText(
+              '${isWarmUp ? 'Repeat for' : 'Hold for'} ${stretch.reps}',
+              color: colors.textSecondary,
+            ),
+          ],
+        ),
+        if (exercise.howTo.isNotEmpty)
+          AppCard(
+            padding: AppSpacing.symmetricPadding(horizontal: 16, vertical: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 4.h,
+              children: [
+                AppText(
+                  'HOW TO',
+                  style: AppTextStyles.label,
+                  color: colors.textSecondary,
+                ),
+                AppText(exercise.howTo.join(' ')),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }
