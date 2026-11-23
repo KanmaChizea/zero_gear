@@ -49,6 +49,12 @@ class PlanDay extends Equatable {
     return (sets * _minutesPerSet / 5).round() * 5;
   }
 
+  static const _secondsPerStretch = 45;
+
+  /// About how long a warm-up or cool-down takes, in whole minutes.
+  static int stretchMinutes(List<PlanExercise> stretches) =>
+      (stretches.length * _secondsPerStretch / 60).ceil();
+
   List<PlanExercise> get warmUp => _phase(DayPhase.warmup);
 
   List<PlanExercise> get main => _phase(DayPhase.main);
