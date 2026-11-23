@@ -29,9 +29,26 @@ jobs:
             "GOOGLE_ANDROID_CLIENT_ID=${{ vars.GOOGLE_ANDROID_CLIENT_ID }}" > .env
       - run: flutter pub get
       - run: flutter build web --release
+      - name: Package build for Vercel
+        run: |
+          mkdir -p .vercel/output/static
+          cp -R build/web/. .vercel/output/static/
+          cat > .vercel/output/config.json <<'JSON'
+          {
+            "version": 3,
+            "routes": [
+              {
+                "src": "/(index\\.html|flutter_bootstrap\\.js|flutter\\.js|main\\.dart\\.js|main\\.dart\\.wasm|main\\.dart\\.mjs|manifest\\.json|version\\.json)",
+                "headers": { "Cache-Control": "no-cache" },
+                "continue": true
+              },
+              { "handle": "filesystem" }
+            ]
+          }
+          JSON
       - name: Deploy to Vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: npx --yes vercel@latest deploy build/web --prod --yes --token "$VERCEL_TOKEN"
+        run: npx --yes vercel@latest deploy --prebuilt --prod --token "$VERCEL_TOKEN"
