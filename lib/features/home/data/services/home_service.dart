@@ -35,8 +35,7 @@ class HomeService extends Cubit<HomeSummary?> {
       final summary = await next.andThen<HomeSummary>((nextDay) async {
         final plan = await _plan.planDay(history.nextDay);
         return plan.map(
-          (nextPlan) =>
-              _summarize(profile, history, nextDay, nextPlan, active),
+          (nextPlan) => _summarize(profile, history, nextDay, nextPlan, active),
         );
       });
       if (summary case Ok(:final value)) emit(value);

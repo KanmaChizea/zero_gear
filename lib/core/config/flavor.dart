@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart';
 
 enum Flavor {
@@ -13,6 +14,7 @@ enum Flavor {
 
   static final Flavor current = Flavor.values.firstWhere(
     (f) => f.name == appFlavor,
-    orElse: () => throw StateError('Unknown flavor: $appFlavor'),
+    orElse: () =>
+        kIsWeb ? Flavor.prod : throw StateError('Unknown flavor: $appFlavor'),
   );
 }

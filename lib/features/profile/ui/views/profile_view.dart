@@ -1,7 +1,10 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zero_gear/core/constants/app_svgs.dart';
 import 'package:zero_gear/core/extensions/string_extensions.dart';
+import 'package:zero_gear/core/pwa/pwa_install.dart';
+import 'package:zero_gear/core/pwa/pwa_install_mode.dart';
 import 'package:zero_gear/core/router/app_route.dart';
 import 'package:zero_gear/core/shared_features/session/data/services/session_cubit.dart';
 import 'package:zero_gear/core/theme/theme.dart';
@@ -130,6 +133,13 @@ class _ProfileBody extends StatelessWidget {
                 ),
                 onPressed: () => context.pushNamed(AppRoute.appearance.name),
               ),
+              if (PwaInstall.mode != PwaInstallMode.none)
+                ProfileItem(
+                  label: 'Install app',
+                  subLabel: 'Add Zero Gear to your home screen',
+                  trailing: Container(),
+                  onPressed: () => _installApp(context),
+                ),
             ],
           ),
           AppSpacing.v24,
@@ -149,15 +159,32 @@ class _ProfileBody extends StatelessWidget {
                   yesOnPress: context.read<AuthService>().signOut,
                 ),
               ),
-              ProfileItem(
-                label: 'Delete account',
-                trailing: Container(),
-                onPressed: () => context.pushNamed(AppRoute.deleteAccount.name),
-              ),
+              if (!kIsWeb)
+                ProfileItem(
+                  label: 'Delete account',
+                  trailing: Container(),
+                  onPressed: () =>
+                      context.pushNamed(AppRoute.deleteAccount.name),
+                ),
             ],
           ),
         ],
       ),
     );
   }
+}
+
+Future<void> _installApp(BuildContext context) async {
+  if (PwaInstall.mode == PwaInstallMode.prompt) {
+    await PwaInstall.prompt();
+    return;
+  }
+  await AppModals.showConfirmationDialog(
+    context,
+    title: 'Install Zero Gear',
+    text: 'Tap the Share button in Safari, then choose Add to Home Screen.',
+    yesLabel: 'Got it',
+    yesOnPress: () {},
+    noLabel: 'Close',
+  );
 }

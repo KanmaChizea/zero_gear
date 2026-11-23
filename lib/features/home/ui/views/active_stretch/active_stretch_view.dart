@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zero_gear/core/audio/audio_guide.dart';
+import 'package:zero_gear/core/constants/app_layout.dart';
 import 'package:zero_gear/core/router/app_route.dart';
 import 'package:zero_gear/core/shared_features/session/data/services/session_cubit.dart';
 import 'package:zero_gear/core/theme/theme.dart';
@@ -20,6 +21,7 @@ import '../../models/active_stretch_ui_state.dart';
 import '../../widgets/exercise/exercise_gif.dart';
 import '../../../data/models/finished_workout.dart';
 import '../../widgets/workout/active_workout_header.dart';
+import '../../widgets/workout/wide_workout_layout.dart';
 import 'active_stretch_view_model.dart';
 
 class ActiveStretchView extends StatelessWidget {
@@ -111,6 +113,33 @@ class _ActiveStretchBodyState extends State<_ActiveStretchBody> {
       },
       builder: (context, state) {
         final stretch = state.current;
+        final wide = AppLayout.isWide(context);
+        final footer = stretch == null
+            ? null
+            : Padding(
+                padding: EdgeInsets.only(bottom: 16.h),
+                child: Column(
+                  spacing: 8.h,
+                  children: [
+                    Button(
+                      label: !state.isLast
+                          ? 'Next stretch'
+                          : isWarmUp
+                          ? 'Start workout'
+                          : 'Done',
+                      isLoading: state.isLast && state.isFinishing,
+                      onPressed: state.isLast ? finish : _next,
+                    ),
+                    if (!state.isLast)
+                      Button(
+                        label: 'Skip $noun',
+                        variant: ButtonVariant.text,
+                        isLoading: state.isFinishing,
+                        onPressed: finish,
+                      ),
+                  ],
+                ),
+              );
         return PopScope(
           canPop: state.index == 0,
           onPopInvokedWithResult: (didPop, _) {
@@ -126,32 +155,7 @@ class _ActiveStretchBodyState extends State<_ActiveStretchBody> {
               currentIndex: state.index,
               length: state.items.length,
             ),
-            footer: stretch == null
-                ? null
-                : Padding(
-                    padding: EdgeInsets.only(bottom: 16.h),
-                    child: Column(
-                      spacing: 8.h,
-                      children: [
-                        Button(
-                          label: !state.isLast
-                              ? 'Next stretch'
-                              : isWarmUp
-                              ? 'Start workout'
-                              : 'Done',
-                          isLoading: state.isLast && state.isFinishing,
-                          onPressed: state.isLast ? finish : _next,
-                        ),
-                        if (!state.isLast)
-                          Button(
-                            label: 'Skip $noun',
-                            variant: ButtonVariant.text,
-                            isLoading: state.isFinishing,
-                            onPressed: finish,
-                          ),
-                      ],
-                    ),
-                  ),
+            footer: wide ? null : footer,
             scrollable: false,
             children: [
               Expanded(
@@ -163,12 +167,23 @@ class _ActiveStretchBodyState extends State<_ActiveStretchBody> {
                     physics: const NeverScrollableScrollPhysics(),
                     onPageChanged: viewModel.onPageChanged,
                     itemCount: stretches.length,
-                    itemBuilder: (context, index) => SingleChildScrollView(
-                      child: _StretchBody(
-                        stretch: stretches[index],
+                    itemBuilder: (context, index) {
+                      final item = stretches[index];
+                      final body = _StretchBody(
+                        stretch: item,
                         isWarmUp: isWarmUp,
-                      ),
-                    ),
+                        showImage: !wide,
+                      );
+                      return wide
+                          ? WidePage(
+                              image: Align(
+                                alignment: Alignment.topCenter,
+                                child: ExerciseGif(url: item.exercise.gifUrl),
+                              ),
+                              details: body,
+                            )
+                          : SingleChildScrollView(child: body);
+                    },
                   ),
                   error: (error) => ErrorView(
                     title: 'Could not load the $noun',
@@ -177,6 +192,7 @@ class _ActiveStretchBodyState extends State<_ActiveStretchBody> {
                   ),
                 ),
               ),
+              if (wide && footer != null) WideFooter(child: footer),
             ],
           ),
         );
@@ -186,10 +202,15 @@ class _ActiveStretchBodyState extends State<_ActiveStretchBody> {
 }
 
 class _StretchBody extends StatelessWidget {
-  const _StretchBody({required this.stretch, required this.isWarmUp});
+  const _StretchBody({
+    required this.stretch,
+    required this.isWarmUp,
+    required this.showImage,
+  });
 
   final PlanExercise stretch;
   final bool isWarmUp;
+  final bool showImage;
 
   @override
   Widget build(BuildContext context) {
@@ -199,7 +220,7 @@ class _StretchBody extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       spacing: 24.h,
       children: [
-        ExerciseGif(url: exercise.gifUrl),
+        if (showImage) ExerciseGif(url: exercise.gifUrl),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           spacing: 4.h,

@@ -93,8 +93,7 @@ class _WeightChartPainter extends CustomPainter {
                     (e.recordedAt.millisecondsSinceEpoch - first) /
                         span *
                         (right - left),
-          gridBottom -
-              (e.weightKg - lo) / (hi - lo) * (gridBottom - gridTop),
+          gridBottom - (e.weightKg - lo) / (hi - lo) * (gridBottom - gridTop),
         ),
     ];
 
@@ -115,8 +114,8 @@ class _WeightChartPainter extends CustomPainter {
     }
 
     final dot = Paint()..color = lineColor;
-    final dense = points.length > 1 &&
-        (right - left) / (points.length - 1) < 12 * k;
+    final dense =
+        points.length > 1 && (right - left) / (points.length - 1) < 12 * k;
     if (!dense) {
       for (final p in points.take(points.length - 1)) {
         canvas.drawCircle(p, 4 * k, dot);

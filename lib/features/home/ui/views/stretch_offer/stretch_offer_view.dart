@@ -102,9 +102,7 @@ class _StretchOfferBody extends StatelessWidget {
                     final proceed = await viewModel.skip();
                     if (!proceed || !context.mounted) return;
                     if (isWarmUp) {
-                      context.pushReplacementNamed(
-                        AppRoute.activeWorkout.name,
-                      );
+                      context.pushReplacementNamed(AppRoute.activeWorkout.name);
                     } else if (finished != null) {
                       context.pushReplacementNamed(
                         AppRoute.workoutComplete.name,

@@ -29,7 +29,7 @@ class WorkoutCompleteView extends StatelessWidget {
       child: Scaffold(
         body: SafeArea(
           child: Padding(
-            padding: AppSpacing.screenPadding,
+            padding: AppSpacing.screenPaddingOf(context),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [

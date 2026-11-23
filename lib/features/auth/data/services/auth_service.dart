@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zero_gear/core/shared_features/session/data/models/user.dart';
 import 'package:zero_gear/core/shared_features/session/data/services/session_cubit.dart';
@@ -17,6 +18,9 @@ class AuthService extends Cubit<AuthActivity> {
     _signedOut = _repository.signedOut.listen((_) {
       if (!_deletingAccount) _session.clear();
     });
+    if (kIsWeb) {
+      _signedIn = _repository.signedIn.listen((_) => _resumeWebSession());
+    }
   }
 
   final AuthRepository _repository;
@@ -24,6 +28,7 @@ class AuthService extends Cubit<AuthActivity> {
   final SessionCubit _session;
 
   late final StreamSubscription<void> _signedOut;
+  StreamSubscription<void>? _signedIn;
 
   // Clearing the session redirects to login, which would skip the
   // "account deleted" screen, so that waits for [completeAccountDeletion].
@@ -58,9 +63,10 @@ class AuthService extends Cubit<AuthActivity> {
     }
   }
 
-  Future<Result<User>> signInWithGoogle() async {
+  Future<Result<void>> signInWithGoogle() async {
     emit(AuthActivity.signingIn);
     try {
+      if (kIsWeb) return await _repository.signInWithGoogleRedirect();
       final credentials = await _google.signIn();
       final result = await credentials.andThen(_repository.signInWithGoogle);
       switch (result) {
@@ -126,6 +132,16 @@ class AuthService extends Cubit<AuthActivity> {
     await _session.clear();
   }
 
+  // The browser returns from Google with a session that restoreSession may
+  // have run too early to see.
+  Future<void> _resumeWebSession() async {
+    if (_session.user != null) return;
+    final current = _repository.currentUser;
+    if (current == null) return;
+    final loaded = await _withProfile(current);
+    if (loaded case Ok(:final value)) await _session.start(value);
+  }
+
   Future<Result<User>> _withProfile(User user) async {
     final result = await _repository.fetchProfile();
     return result.map((profile) => user.withProfile(profile));
@@ -143,6 +159,7 @@ class AuthService extends Cubit<AuthActivity> {
   @override
   Future<void> close() async {
     await _signedOut.cancel();
+    await _signedIn?.cancel();
     return super.close();
   }
 }

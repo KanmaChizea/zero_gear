@@ -16,32 +16,39 @@ class NotFoundView extends StatelessWidget {
     final colors = context.colors;
 
     return AppScreen(
+      scrollable: false,
       children: [
-        const Spacer(),
-        SvgIcon(
-          AppSvgs.sadBadge,
-          size: 96,
-          keepOriginalColors: true,
-          currentColor: colors.accentOn,
+        Expanded(
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SvgIcon(
+                  AppSvgs.sadBadge,
+                  size: 96,
+                  keepOriginalColors: true,
+                  currentColor: colors.accentOn,
+                ),
+                AppSpacing.v24,
+                AppText(
+                  'Page not found',
+                  style: AppTextStyles.title,
+                  textAlign: TextAlign.center,
+                ),
+                AppSpacing.v8,
+                AppText(
+                  'The page you are looking for does not exist.',
+                  color: colors.textSecondary,
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
         ),
-        AppSpacing.v24,
-        AppText(
-          'Page not found',
-          style: AppTextStyles.title,
-          textAlign: TextAlign.center,
-        ),
-        AppSpacing.v8,
-        AppText(
-          'The page you are looking for does not exist.',
-          color: colors.textSecondary,
-          textAlign: TextAlign.center,
-        ),
-        const Spacer(),
         Button(
           label: 'Go home',
           onPressed: () => context.goNamed(AppRoute.home.name),
         ),
-        AppSpacing.v16,
       ],
     );
   }

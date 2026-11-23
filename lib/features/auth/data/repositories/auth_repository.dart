@@ -22,6 +22,10 @@ class AuthRepository {
     (change) => change.event == sb.AuthChangeEvent.signedOut,
   );
 
+  Stream<void> get signedIn => _client.auth.onAuthStateChange.where(
+    (change) => change.event == sb.AuthChangeEvent.signedIn,
+  );
+
   Future<Result<Profile?>> fetchProfile() async {
     final result = await _client.request(
       (db) => db.from(Tables.profiles).select().limit(1),
@@ -49,6 +53,15 @@ class AuthRepository {
           : Result.ok(_toUser(user));
     });
   }
+
+  // Leaves the page for Google; the session is picked up when the browser
+  // returns to the app.
+  Future<Result<void>> signInWithGoogleRedirect() => _client.request<void>(
+    (db) => db.auth.signInWithOAuth(
+      sb.OAuthProvider.google,
+      redirectTo: '${Uri.base.origin}/',
+    ),
+  );
 
   Future<Result<void>> signOut() => _client.request<void>(
     (db) => db.auth.signOut(scope: sb.SignOutScope.local),

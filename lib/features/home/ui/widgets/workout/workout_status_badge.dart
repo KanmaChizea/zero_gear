@@ -18,11 +18,7 @@ class WorkoutStatusBadge extends StatelessWidget {
         colors.successPrimary,
         colors.successOn,
       ),
-      WorkoutStatus.incomplete => (
-        'INCOMPLETE',
-        null,
-        colors.textSecondary,
-      ),
+      WorkoutStatus.incomplete => ('INCOMPLETE', null, colors.textSecondary),
     };
 
     return Container(

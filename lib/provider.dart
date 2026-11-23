@@ -57,8 +57,7 @@ class AppProvider extends StatelessWidget {
           providers: [
             BlocProvider.value(value: auth),
             BlocProvider(
-              create: (_) =>
-                  ProfileService(ProfileRepository(client), session),
+              create: (_) => ProfileService(ProfileRepository(client), session),
             ),
             BlocProvider(create: (_) => PlanService(PlanRepository(client))),
             BlocProvider(

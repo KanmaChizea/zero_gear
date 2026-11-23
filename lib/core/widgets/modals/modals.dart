@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zero_gear/core/constants/app_layout.dart';
 import 'package:zero_gear/core/theme/theme.dart';
 import 'package:zero_gear/core/utils/scale_util.dart';
 import 'package:zero_gear/core/widgets/modals/confirmation_modal.dart';
@@ -20,6 +21,10 @@ class AppModals {
           backgroundColor: Colors.transparent,
           elevation: 0,
           insetPadding: AppSpacing.fromLTRB(24, 24, 24, 24),
+          constraints: const BoxConstraints(
+            minWidth: 280,
+            maxWidth: AppLayout.maxDialogWidth,
+          ),
           child: Container(
             padding: AppSpacing.fromLTRB(24, 24, 24, 24),
             decoration: BoxDecoration(

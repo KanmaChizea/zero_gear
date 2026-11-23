@@ -21,10 +21,7 @@ extension ExerciseScript on PlanExercise {
   /// Just the name and how to do a stretch.
   String get stretchScript {
     final e = exercise;
-    return [
-      '${e.name}.',
-      if (e.howTo.isNotEmpty) _steps(e.howTo),
-    ].join(' ');
+    return ['${e.name}.', if (e.howTo.isNotEmpty) _steps(e.howTo)].join(' ');
   }
 
   String get _amount {

@@ -1,5 +1,5 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:zero_gear/core/constants/app_layout.dart';
 import 'package:zero_gear/core/constants/app_svgs.dart';
 import 'package:zero_gear/core/extensions/list_extensions.dart';
 import 'package:zero_gear/core/theme/theme.dart';
@@ -11,6 +11,8 @@ import 'package:zero_gear/core/widgets/icons/svg_icon.dart';
 import 'package:zero_gear/core/widgets/text/app_text.dart';
 import 'package:zero_gear/features/home/data/models/exercise.dart';
 import 'package:zero_gear/features/home/ui/widgets/exercise/detail_section.dart';
+import 'package:zero_gear/features/home/ui/widgets/exercise/exercise_gif.dart';
+import 'package:zero_gear/features/home/ui/widgets/workout/wide_workout_layout.dart';
 
 class ExerciseDetailView extends StatelessWidget {
   const ExerciseDetailView({
@@ -22,24 +24,14 @@ class ExerciseDetailView extends StatelessWidget {
   final String repCount;
   @override
   Widget build(BuildContext context) {
-    return AppScreen(
-      header: const AppBackButton(),
+    final wide = AppLayout.isWide(context);
+    final details = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        AspectRatio(
-          aspectRatio: 342 / 260,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20.r),
-              color: context.colors.bgTertiary,
-              image: exercise.gifUrl != null
-                  ? DecorationImage(
-                      image: CachedNetworkImageProvider(exercise.gifUrl!),
-                    )
-                  : null,
-            ),
-          ),
-        ),
-        AppSpacing.v24,
+        if (!wide) ...[
+          ExerciseGif(url: exercise.gifUrl, heroTag: exercise.slug),
+          AppSpacing.v24,
+        ],
         AppText(exercise.name, style: AppTextStyles.display),
         AppSpacing.v4,
         AppText(
@@ -127,6 +119,26 @@ class ExerciseDetailView extends StatelessWidget {
               ],
             ),
           ),
+      ],
+    );
+    return AppScreen(
+      header: const AppBackButton(),
+      scrollable: false,
+      children: [
+        Expanded(
+          child: wide
+              ? WidePage(
+                  image: Align(
+                    alignment: Alignment.topCenter,
+                    child: ExerciseGif(
+                      url: exercise.gifUrl,
+                      heroTag: exercise.slug,
+                    ),
+                  ),
+                  details: details,
+                )
+              : SingleChildScrollView(child: details),
+        ),
       ],
     );
   }

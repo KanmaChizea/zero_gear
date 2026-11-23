@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:zero_gear/core/constants/app_layout.dart';
 import 'package:zero_gear/core/utils/scale_util.dart';
 
 abstract final class AppSpacing {
@@ -56,5 +57,11 @@ abstract final class AppSpacing {
   );
 
   static EdgeInsets get screenPadding =>
-      EdgeInsets.fromLTRB(24.w, 12.h, 24.w, 0);
+      EdgeInsets.fromLTRB(24.w, 12.h, 24.w, 12.h);
+
+  /// [screenPadding], with more room on wide windows.
+  static EdgeInsets screenPaddingOf(BuildContext context) =>
+      AppLayout.isWide(context)
+      ? const EdgeInsets.symmetric(horizontal: 64, vertical: 24)
+      : screenPadding;
 }

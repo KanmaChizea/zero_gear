@@ -1,6 +1,10 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-enum LocalStorageKey { themeMode, activeWorkout, pendingWorkouts }
+enum LocalStorageKey {
+  themeMode,
+  activeWorkout,
+  pendingWorkouts,
+}
 
 class LocalStorage {
   LocalStorage._(this._prefs);

@@ -72,6 +72,7 @@ class GoogleSignInRepository {
   Future<void> disconnect() => _run((google) => google.disconnect());
 
   Future<void> _run(Future<void> Function(GoogleSignIn google) action) async {
+    if (kIsWeb) return;
     try {
       await _ensureInitialized();
       await action(GoogleSignIn.instance);

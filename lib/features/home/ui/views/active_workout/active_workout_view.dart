@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zero_gear/core/extensions/string_extensions.dart';
 import 'package:zero_gear/core/audio/audio_guide.dart';
+import 'package:zero_gear/core/constants/app_layout.dart';
 import 'package:zero_gear/core/router/app_route.dart';
 import 'package:zero_gear/core/shared_features/session/data/services/session_cubit.dart';
 import 'package:zero_gear/core/theme/theme.dart';
@@ -22,6 +23,7 @@ import '../../models/active_workout_ui_state.dart';
 import '../../widgets/exercise/exercise_gif.dart';
 import '../../widgets/workout/active_workout_header.dart';
 import '../../widgets/workout/set_chip.dart';
+import '../../widgets/workout/wide_workout_layout.dart';
 import 'active_workout_view_model.dart';
 
 class ActiveWorkoutView extends StatelessWidget {
@@ -122,6 +124,36 @@ class _ActiveWorkoutBodyState extends State<_ActiveWorkoutBody> {
       },
       builder: (context, state) {
         final exercise = state.current;
+        final wide = AppLayout.isWide(context);
+        final footer = exercise == null
+            ? null
+            : Padding(
+                padding: EdgeInsets.only(bottom: 16.h),
+                child: Column(
+                  spacing: 8.h,
+                  children: [
+                    Button(
+                      label: state.isLast ? 'Finish workout' : 'Next exercise',
+                      enabled: state.isCurrentDone,
+                      isLoading: state.isFinishing,
+                      onPressed: state.isLast ? finish : _next,
+                    ),
+                    Button(
+                      label: 'See form tips',
+                      variant: ButtonVariant.text,
+                      onPressed: () => context.pushNamed(
+                        AppRoute.exerciseDetail.name,
+                        extra: exercise.exercise,
+                        pathParameters: {
+                          'repCount':
+                              '${'set'.plural(exercise.sets)} × '
+                              '${exercise.repsText}',
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              );
         return PopScope(
           canPop: exercise == null,
           onPopInvokedWithResult: (didPop, _) {
@@ -140,37 +172,7 @@ class _ActiveWorkoutBodyState extends State<_ActiveWorkoutBody> {
               currentIndex: state.index,
               length: state.exercises.length,
             ),
-            footer: exercise == null
-                ? null
-                : Padding(
-                    padding: EdgeInsets.only(bottom: 16.h),
-                    child: Column(
-                      spacing: 8.h,
-                      children: [
-                        Button(
-                          label: state.isLast
-                              ? 'Finish workout'
-                              : 'Next exercise',
-                          enabled: state.isCurrentDone,
-                          isLoading: state.isFinishing,
-                          onPressed: state.isLast ? finish : _next,
-                        ),
-                        Button(
-                          label: 'See form tips',
-                          variant: ButtonVariant.text,
-                          onPressed: () => context.pushNamed(
-                            AppRoute.exerciseDetail.name,
-                            extra: exercise.exercise,
-                            pathParameters: {
-                              'repCount':
-                                  '${'set'.plural(exercise.sets)} × '
-                                  '${exercise.repsText}',
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+            footer: wide ? null : footer,
             scrollable: false,
             children: [
               Expanded(
@@ -186,15 +188,29 @@ class _ActiveWorkoutBodyState extends State<_ActiveWorkoutBody> {
                       physics: const NeverScrollableScrollPhysics(),
                       onPageChanged: viewModel.onPageChanged,
                       itemCount: state.exercises.length,
-                      itemBuilder: (context, index) => SingleChildScrollView(
-                        child: _ExerciseBody(
-                          exercise: state.exercises[index],
+                      itemBuilder: (context, index) {
+                        final item = state.exercises[index];
+                        final body = _ExerciseBody(
+                          exercise: item,
+                          showImage: !wide,
                           setsDone: index < workout.setsDone.length
                               ? workout.setsDone[index]
                               : 0,
                           onToggleSet: (set) => viewModel.toggleSet(index, set),
-                        ),
-                      ),
+                        );
+                        return wide
+                            ? WidePage(
+                                image: Align(
+                                  alignment: Alignment.topCenter,
+                                  child: ExerciseGif(
+                                    url: item.exercise.gifUrl,
+                                    heroTag: item.exercise.slug,
+                                  ),
+                                ),
+                                details: body,
+                              )
+                            : SingleChildScrollView(child: body);
+                      },
                     );
                   },
                   error: (error) => ErrorView(
@@ -204,6 +220,7 @@ class _ActiveWorkoutBodyState extends State<_ActiveWorkoutBody> {
                   ),
                 ),
               ),
+              if (wide && footer != null) WideFooter(child: footer),
             ],
           ),
         );
@@ -215,11 +232,13 @@ class _ActiveWorkoutBodyState extends State<_ActiveWorkoutBody> {
 class _ExerciseBody extends StatelessWidget {
   const _ExerciseBody({
     required this.exercise,
+    required this.showImage,
     required this.setsDone,
     required this.onToggleSet,
   });
 
   final PlanExercise exercise;
+  final bool showImage;
   final int setsDone;
   final ValueChanged<int> onToggleSet;
 
@@ -233,7 +252,8 @@ class _ExerciseBody extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       spacing: 24.h,
       children: [
-        ExerciseGif(url: detail.gifUrl),
+        if (showImage)
+          ExerciseGif(url: detail.gifUrl, heroTag: detail.slug),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           spacing: 4.h,

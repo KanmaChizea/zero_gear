@@ -19,7 +19,7 @@ class AppScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: AppSpacing.screenPadding,
+          padding: AppSpacing.screenPaddingOf(context),
           child: Column(
             spacing: 24.h,
             crossAxisAlignment: CrossAxisAlignment.start,
