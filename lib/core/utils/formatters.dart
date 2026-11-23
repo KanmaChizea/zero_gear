@@ -131,5 +131,4 @@ const _weekdays = [
 
 /// Formats [date] like "THURSDAY 19 NOVEMBER".
 String formatWeekdayDayMonth(DateTime date) =>
-    '${_weekdays[date.weekday - 1]} ${date.day} ${_months[date.month - 1]}'
-        .toUpperCase();
+    '${_weekdays[date.weekday - 1]} ${date.day} ${_months[date.month - 1]}';

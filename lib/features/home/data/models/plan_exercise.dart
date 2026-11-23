@@ -27,6 +27,8 @@ class PlanExercise extends Equatable {
   final String reps;
   final Exercise exercise;
 
+  String get repsText => int.tryParse(reps) != null ? '$reps reps' : reps;
+
   Map<String, Object?> toJson() => {
     ...exercise.toJson(),
     'phase': phase.name,

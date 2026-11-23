@@ -83,17 +83,24 @@ class _HomeBody extends StatelessWidget {
                     TodaysCard(
                       data: data,
                       isStarting: state.isStarting,
+                      isResuming: state.isResuming,
                       isGivingUp: state.isGivingUp,
                       onStart: () => context.pushNamed(
                         AppRoute.dayDetail.name,
                         pathParameters: {'day': '${data.nextDay.overallDay}'},
                       ),
-                      onResume: () => context.pushNamed(
-                        AppRoute.dayDetail.name,
-                        pathParameters: {
-                          'day': '${data.activeWorkout!.day.overallDay}',
-                        },
-                      ),
+                      onResume: () async {
+                        if (!await viewModel.resume() || !context.mounted) {
+                          return;
+                        }
+                        await context.pushNamed(
+                          AppRoute.dayDetail.name,
+                          pathParameters: {
+                            'day':
+                                '${data.activeWorkout?.day.overallDay ?? data.nextDay.overallDay}',
+                          },
+                        );
+                      },
                       onGiveUp: viewModel.giveUp,
                     ),
                     ProgressSummary(summary: data),

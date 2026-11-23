@@ -12,12 +12,14 @@ class ConfirmationModal extends StatelessWidget {
     required this.yesLabel,
     required this.yesOnPress,
     required this.noLabel,
+    this.noOnPress,
   });
   final String title;
   final String text;
   final String yesLabel;
   final Function() yesOnPress;
   final String noLabel;
+  final Function()? noOnPress;
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -39,7 +41,10 @@ class ConfirmationModal extends StatelessWidget {
         Button(
           label: noLabel,
           variant: ButtonVariant.outlined,
-          onPressed: context.pop,
+          onPressed: () {
+            context.pop();
+            noOnPress?.call();
+          },
         ),
       ],
     );

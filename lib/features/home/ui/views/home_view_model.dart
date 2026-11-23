@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zero_gear/core/utils/async_value.dart';
 import 'package:zero_gear/core/utils/result.dart';
@@ -10,14 +12,33 @@ class HomeViewModel extends Cubit<HomeUiState> {
   HomeViewModel({required this._homeService, required this._workoutService})
     : super(HomeUiState(summary: AsyncValue.loading())) {
     initialize();
+    _workoutChanges = _workoutService.stream
+        .distinct(
+          (a, b) =>
+              (a.active == null) == (b.active == null) &&
+              identical(a.history, b.history),
+        )
+        .listen((_) => initialize(showLoading: false));
+  }
+
+  StreamSubscription<Object?>? _workoutChanges;
+
+  @override
+  Future<void> close() {
+    _workoutChanges?.cancel();
+    return super.close();
   }
 
   final HomeService _homeService;
   final WorkoutService _workoutService;
 
+  int _loadId = 0;
+
   Future<void> initialize({bool showLoading = true}) async {
+    final loadId = ++_loadId;
     if (showLoading) emit(state.copyWith(summary: AsyncValue.loading()));
     final result = await _homeService.load();
+    if (loadId != _loadId || isClosed) return;
     switch (result) {
       case Ok(:final value):
         emit(state.copyWith(summary: AsyncValue.data(value)));
@@ -40,6 +61,25 @@ class HomeViewModel extends Cubit<HomeUiState> {
       case Error(:final error):
         emit(
           state.copyWith(isStarting: false, errorMessage: () => error.message),
+        );
+        return false;
+    }
+  }
+
+  Future<bool> resume() async {
+    final summary = state.summary.data;
+    if (summary == null || state.isBusy) return false;
+    if (summary.activeWorkout != null) return true;
+
+    emit(state.copyWith(isResuming: true));
+    final result = await _workoutService.resumeIncomplete();
+    switch (result) {
+      case Ok():
+        emit(state.copyWith(isResuming: false));
+        return true;
+      case Error(:final error):
+        emit(
+          state.copyWith(isResuming: false, errorMessage: () => error.message),
         );
         return false;
     }

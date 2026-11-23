@@ -1,5 +1,6 @@
 import 'package:zero_gear/features/home/data/models/plan_enums.dart';
 import 'package:zero_gear/features/home/data/models/exercise.dart';
+import 'package:zero_gear/features/home/data/models/finished_workout.dart';
 import 'package:zero_gear/features/home/ui/views/active_stretch/active_stretch_view.dart';
 import 'package:zero_gear/features/home/ui/views/active_workout/active_workout_view.dart';
 import 'package:zero_gear/features/home/ui/views/day_detail/day_detail_view.dart';
@@ -30,16 +31,21 @@ List<RouteBase> featureRoutes() => [
         (state) => StretchOfferView(
           phase: DayPhase.values.byName(state.pathParameters['phase']!),
           day: int.parse(state.pathParameters['day']!),
+          finished: state.extra as FinishedWorkout?,
         ),
       ),
       AppRoute.activeStretch.toGoRoute(
         (state) => ActiveStretchView(
           phase: DayPhase.values.byName(state.pathParameters['phase']!),
           day: int.parse(state.pathParameters['day']!),
+          finished: state.extra as FinishedWorkout?,
         ),
       ),
       AppRoute.activeWorkout.toGoRoute((_) => const ActiveWorkoutView()),
-      AppRoute.workoutComplete.toGoRoute((_) => const WorkoutCompleteView()),
+      AppRoute.workoutComplete.toGoRoute(
+        (state) =>
+            WorkoutCompleteView(finished: state.extra as FinishedWorkout),
+      ),
       AppRoute.dayDetail.toGoRoute(
         (state) => DayDetailView(day: int.parse(state.pathParameters['day']!)),
       ),

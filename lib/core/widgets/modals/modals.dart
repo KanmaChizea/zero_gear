@@ -11,6 +11,7 @@ class AppModals {
     required String yesLabel,
     required Function() yesOnPress,
     required String noLabel,
+    Function()? noOnPress,
   }) {
     return showDialog(
       context: context,
@@ -32,6 +33,7 @@ class AppModals {
               yesLabel: yesLabel,
               yesOnPress: yesOnPress,
               noLabel: noLabel,
+              noOnPress: noOnPress,
             ),
           ),
         );

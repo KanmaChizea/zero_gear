@@ -14,6 +14,7 @@ class TodaysCard extends StatelessWidget {
     required this.onResume,
     required this.onGiveUp,
     this.isStarting = false,
+    this.isResuming = false,
     this.isGivingUp = false,
   });
 
@@ -22,6 +23,7 @@ class TodaysCard extends StatelessWidget {
   final VoidCallback onResume;
   final VoidCallback onGiveUp;
   final bool isStarting;
+  final bool isResuming;
   final bool isGivingUp;
   @override
   Widget build(BuildContext context) {
@@ -60,15 +62,18 @@ class TodaysCard extends StatelessWidget {
           if (!data.startsTomorrow)
             Row(
               children: [
-                if (data.activeWorkout != null)
+                if (data.activeWorkout != null || data.unfinishedToday != null)
                   Button(
                     label: 'Resume',
                     onPressed: onResume,
+                    isLoading: isResuming,
                     enabled: !isGivingUp,
                     fullWidth: false,
                     backgroundColor: context.colors.bgPrimary,
                     foregroundColor: context.colors.textPrimary,
                   ),
+                // An unfinished workout is already saved as incomplete, so
+                // there is nothing left to give up.
                 if (data.activeWorkout != null)
                   Button(
                     label: 'Give up',
@@ -78,7 +83,7 @@ class TodaysCard extends StatelessWidget {
                     variant: ButtonVariant.text,
                     foregroundColor: context.colors.textInverse,
                   ),
-                if (data.activeWorkout == null)
+                if (data.activeWorkout == null && data.unfinishedToday == null)
                   Button(
                     label: 'Start workout',
                     onPressed: onStart,
@@ -98,6 +103,8 @@ class TodaysCard extends StatelessWidget {
 extension _XHomeSummary on HomeSummary {
   String get line1 => activeWorkout != null
       ? 'IN PROGRESS \u2022 DAY ${activeWorkout!.day.dayNumber}'
+      : unfinishedToday != null
+      ? 'UNFINISHED \u2022 DAY ${formatNumber(nextDay.overallDay)}'
       : 'UP NEXT \u2022 DAY ${formatNumber(nextDay.overallDay)}';
 
   String get line2 => activeWorkout?.day.name ?? nextDay.name;
@@ -106,6 +113,11 @@ extension _XHomeSummary on HomeSummary {
     final active = activeWorkout;
     if (active != null) {
       return 'Exercise ${active.currentIndex + 1} of ${active.exercises.length}'
+          ' \u00b7 Your ticked sets are saved';
+    }
+    final unfinished = unfinishedToday;
+    if (unfinished != null) {
+      return 'Stopped at ${formatTime(unfinished.endedAt)}'
           ' \u00b7 Your ticked sets are saved';
     }
     return '${nextPlan.main.length} exercises'

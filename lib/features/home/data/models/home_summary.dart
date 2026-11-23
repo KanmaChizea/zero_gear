@@ -54,6 +54,11 @@ class HomeSummary extends Equatable {
 
   final Map<DateTime, WorkoutStatus> calendar;
 
+  WorkoutSummary? get unfinishedToday =>
+      activeWorkout == null && todayWorkout?.status == WorkoutStatus.incomplete
+      ? todayWorkout
+      : null;
+
   bool get startsTomorrow => todayWorkout?.status == WorkoutStatus.completed;
 
   @override

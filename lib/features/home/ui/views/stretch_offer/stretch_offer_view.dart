@@ -12,14 +12,24 @@ import '../../../data/services/plan_service.dart';
 import '../../../data/services/workout_service.dart';
 import '../../models/stretch_offer_ui_state.dart';
 import '../../widgets/workout/stretch_tile.dart';
+import '../../../data/models/finished_workout.dart';
 import '../../widgets/workout/workout_header.dart';
 import 'stretch_offer_view_model.dart';
 
 class StretchOfferView extends StatelessWidget {
-  const StretchOfferView({super.key, required this.phase, required this.day});
+  const StretchOfferView({
+    super.key,
+    required this.phase,
+    required this.day,
+    this.finished,
+  });
 
   final DayPhase phase;
   final int day;
+
+  /// The workout just finished, carried through the cool-down so the
+  /// summary can follow it. Null for the warm-up.
+  final FinishedWorkout? finished;
 
   @override
   Widget build(BuildContext context) {
@@ -30,13 +40,15 @@ class StretchOfferView extends StatelessWidget {
         phase: phase,
         day: day,
       ),
-      child: const _StretchOfferBody(),
+      child: _StretchOfferBody(finished: finished),
     );
   }
 }
 
 class _StretchOfferBody extends StatelessWidget {
-  const _StretchOfferBody();
+  const _StretchOfferBody({required this.finished});
+
+  final FinishedWorkout? finished;
 
   @override
   Widget build(BuildContext context) {
@@ -78,6 +90,7 @@ class _StretchOfferBody extends StatelessWidget {
                       'phase': viewModel.phase.name,
                       'day': '${viewModel.day}',
                     },
+                    extra: finished,
                   ),
                 ),
                 Button(
@@ -91,6 +104,11 @@ class _StretchOfferBody extends StatelessWidget {
                     if (isWarmUp) {
                       context.pushReplacementNamed(
                         AppRoute.activeWorkout.name,
+                      );
+                    } else if (finished != null) {
+                      context.pushReplacementNamed(
+                        AppRoute.workoutComplete.name,
+                        extra: finished,
                       );
                     } else {
                       context.goNamed(AppRoute.home.name);

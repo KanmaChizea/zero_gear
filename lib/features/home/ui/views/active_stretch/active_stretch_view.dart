@@ -3,11 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zero_gear/core/router/app_route.dart';
 import 'package:zero_gear/core/theme/theme.dart';
 import 'package:zero_gear/core/utils/scale_util.dart';
-import 'package:zero_gear/core/widgets/buttons/app_back_button.dart';
 import 'package:zero_gear/core/widgets/buttons/button.dart';
 import 'package:zero_gear/core/widgets/containers/app_card.dart';
 import 'package:zero_gear/core/widgets/containers/app_screen.dart';
-import 'package:zero_gear/core/widgets/containers/stepper.dart';
 import 'package:zero_gear/core/widgets/feedback/app_toast.dart';
 import 'package:zero_gear/core/widgets/feedback/error_view.dart';
 import 'package:zero_gear/core/widgets/text/app_text.dart';
@@ -18,13 +16,23 @@ import '../../../data/services/plan_service.dart';
 import '../../../data/services/workout_service.dart';
 import '../../models/active_stretch_ui_state.dart';
 import '../../widgets/exercise/exercise_gif.dart';
+import '../../../data/models/finished_workout.dart';
+import '../../widgets/workout/active_workout_header.dart';
 import 'active_stretch_view_model.dart';
 
 class ActiveStretchView extends StatelessWidget {
-  const ActiveStretchView({super.key, required this.phase, required this.day});
+  const ActiveStretchView({
+    super.key,
+    required this.phase,
+    required this.day,
+    this.finished,
+  });
 
   final DayPhase phase;
   final int day;
+
+  /// The workout just finished; see [StretchOfferView.finished].
+  final FinishedWorkout? finished;
 
   @override
   Widget build(BuildContext context) {
@@ -35,13 +43,15 @@ class ActiveStretchView extends StatelessWidget {
         phase: phase,
         day: day,
       ),
-      child: const _ActiveStretchBody(),
+      child: _ActiveStretchBody(finished: finished),
     );
   }
 }
 
 class _ActiveStretchBody extends StatefulWidget {
-  const _ActiveStretchBody();
+  const _ActiveStretchBody({required this.finished});
+
+  final FinishedWorkout? finished;
 
   @override
   State<_ActiveStretchBody> createState() => _ActiveStretchBodyState();
@@ -77,6 +87,11 @@ class _ActiveStretchBodyState extends State<_ActiveStretchBody> {
       if (!proceed || !context.mounted) return;
       if (isWarmUp) {
         context.pushReplacementNamed(AppRoute.activeWorkout.name);
+      } else if (widget.finished != null) {
+        context.pushReplacementNamed(
+          AppRoute.workoutComplete.name,
+          extra: widget.finished,
+        );
       } else {
         context.goNamed(AppRoute.home.name);
       }
@@ -98,40 +113,14 @@ class _ActiveStretchBodyState extends State<_ActiveStretchBody> {
             if (!didPop) _previous();
           },
           child: AppScreen(
-            header: Column(
-              spacing: 16.h,
-              children: [
-                Row(
-                  spacing: 16.w,
-                  children: [
-                    AppBackButton(
-                      onPress: state.index > 0 ? _previous : context.pop,
-                    ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          AppText(
-                            isWarmUp ? 'Warm-up' : 'Cool-down',
-                            style: AppTextStyles.caption,
-                            color: context.colors.textSecondary,
-                          ),
-                          if (stretch != null)
-                            AppText(
-                              'Stretch ${state.index + 1} of ${state.items.length}',
-                              style: AppTextStyles.bodyMedium,
-                            ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                if (stretch != null)
-                  AppStepper(
-                    currentIndex: state.index,
-                    length: state.items.length,
-                  ),
-              ],
+            header: ActiveWorkoutHeader(
+              onBack: state.index > 0 ? _previous : () => context.pop(),
+              label: isWarmUp ? 'Warm-up' : 'Cool-down',
+              title: stretch == null
+                  ? null
+                  : 'Stretch ${state.index + 1} of ${state.items.length}',
+              currentIndex: state.index,
+              length: state.items.length,
             ),
             footer: stretch == null
                 ? null

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zero_gear/core/router/app_route.dart';
 import 'package:zero_gear/core/utils/formatters.dart';
 import 'package:zero_gear/core/utils/scale_util.dart';
+import 'package:zero_gear/core/widgets/buttons/button.dart';
 import 'package:zero_gear/core/widgets/containers/app_screen.dart';
+import 'package:zero_gear/core/widgets/feedback/app_toast.dart';
 import 'package:zero_gear/core/widgets/feedback/error_view.dart';
 
 import '../../../data/models/workout_record.dart';
@@ -38,28 +41,50 @@ class _WorkoutRecordBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.read<WorkoutRecordViewModel>();
-    return BlocBuilder<WorkoutRecordViewModel, WorkoutRecordUiState>(
+    return BlocConsumer<WorkoutRecordViewModel, WorkoutRecordUiState>(
+      listenWhen: (previous, current) =>
+          previous.errorMessage != current.errorMessage,
+      listener: (context, state) {
+        if (state.errorMessage == null) return;
+        viewModel.clearError();
+        AppToast.error(context, title: state.errorMessage!);
+      },
       builder: (context, state) {
-        final tag = formatWeekdayDayMonth(viewModel.date);
+        final tag = formatWeekdayDayMonth(viewModel.date).toUpperCase();
 
         if (state.record.hasError) {
           return AppScreen(
+            scrollable: false,
             header: WorkoutHeader(
               tag: tag,
               title: 'Workout',
               text: 'We could not load this day.',
             ),
             children: [
-              ErrorView(
-                title: 'Could not load this workout',
-                text: state.record.error!,
-                onRetry: viewModel.initialize,
+              Expanded(
+                child: ErrorView(
+                  title: 'Could not load this workout',
+                  text: state.record.error!,
+                  onRetry: viewModel.initialize,
+                ),
               ),
             ],
           );
         }
 
-        if (!state.record.hasData) return const AppScreen(children: []);
+        if (state.record.isLoading) {
+          return AppScreen(
+            scrollable: false,
+            header: WorkoutHeader(
+              tag: tag,
+              title: 'Workout',
+              text: 'Loading this day…',
+            ),
+            children: const [
+              Expanded(child: Center(child: CircularProgressIndicator())),
+            ],
+          );
+        }
 
         final record = state.record.data;
         if (record == null) {
@@ -80,6 +105,21 @@ class _WorkoutRecordBody extends StatelessWidget {
             title: 'Day ${record.overallDay} · ${record.dayName}',
             text: _timesText(record),
           ),
+          footer: state.canResume
+              ? Padding(
+                  padding: EdgeInsets.only(bottom: 16.h),
+                  child: Button(
+                    label: 'Complete workout',
+                    isLoading: state.isResuming,
+                    onPressed: () async {
+                      if (!await viewModel.resume() || !context.mounted) {
+                        return;
+                      }
+                      context.pushReplacementNamed(AppRoute.activeWorkout.name);
+                    },
+                  ),
+                )
+              : null,
           children: [
             RecordStats(record: record),
             SizedBox(height: 24.h),
