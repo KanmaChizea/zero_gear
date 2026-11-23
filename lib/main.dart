@@ -68,7 +68,13 @@ class App extends StatelessWidget {
       routerConfig: router,
       builder: (context, child) {
         ScaleUtil.update(MediaQuery.sizeOf(context));
-        return LoaderHost(child: child!);
+        // The app's primary colour is orange, which Flutter would otherwise
+        // use for the browser and installed-app status bar.
+        return Title(
+          title: Flavor.current.appName,
+          color: Theme.of(context).scaffoldBackgroundColor,
+          child: LoaderHost(child: child!),
+        );
       },
     );
   }
