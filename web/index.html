@@ -29,8 +29,69 @@
       window.__pwaInstallPrompt = null;
     });
   </script>
+  <style>
+    :root { --splash-bg: #F7F7F6; --splash-fg: #2B2B2A; }
+    :root[data-theme="dark"] { --splash-bg: #161615; --splash-fg: #E9E9E8; }
+    html, body { margin: 0; height: 100%; background: var(--splash-bg); }
+    #splash {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      background: var(--splash-bg);
+      color: var(--splash-fg);
+      transition: opacity 250ms ease;
+    }
+    #splash.hide { opacity: 0; pointer-events: none; }
+    #splash svg { width: 96px; height: auto; display: block; }
+    #splash span {
+      font: 700 22px/28px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      letter-spacing: -0.3px;
+    }
+  </style>
+  <script>
+    (function () {
+      var mode = 'system';
+      try {
+        var stored = localStorage.getItem('flutter.themeMode');
+        if (stored) {
+          try { mode = JSON.parse(stored); } catch (e) { mode = stored; }
+        }
+      } catch (e) {}
+      var dark = mode === 'dark' ||
+        (mode !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    })();
+  </script>
 </head>
 <body>
+  <div id="splash" role="status" aria-label="Loading Zero Gear">
+    <svg viewBox="0 0 108 109" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M96 61C96 87.5097 74.5097 109 48 109C21.4903 109 0 87.5097 0 61C0 34.4903 21.4903 13 48 13C74.5097 13 96 34.4903 96 61ZM14 61C14 79.7777 29.2223 95 48 95C66.7777 95 82 79.7777 82 61C82 42.2223 66.7777 27 48 27C29.2223 27 14 42.2223 14 61Z" fill="currentColor"/>
+      <path d="M69 40L27 82" stroke-width="12" stroke-linecap="round" stroke="currentColor"/>
+      <g>
+        <animateTransform attributeName="transform" type="rotate" from="0 48 61" to="360 48 61" dur="1.4s" repeatCount="indefinite"/>
+        <g>
+          <animateTransform attributeName="transform" type="rotate" from="0 77 31" to="-360 77 31" dur="1.4s" repeatCount="indefinite"/>
+          <circle cx="76.9663" cy="31.0224" r="12.35" fill="#D85A30"/>
+          <path d="M77.9339 20.234C87.6524 9.81225 97.3794 18.8828 87.6609 29.3046" stroke-width="4.75" stroke-linecap="round" stroke="#D85A30"/>
+        </g>
+      </g>
+    </svg>
+    <span>Zero Gear</span>
+  </div>
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var splash = document.getElementById('splash');
+      if (!splash) return;
+      splash.classList.add('hide');
+      setTimeout(function () { splash.remove(); }, 300);
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
