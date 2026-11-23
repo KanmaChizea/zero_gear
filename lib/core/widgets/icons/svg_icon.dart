@@ -10,6 +10,7 @@ class SvgIcon extends StatelessWidget {
     this.size,
     this.color,
     this.keepOriginalColors = false,
+    this.currentColor,
   });
 
   final String asset;
@@ -17,10 +18,15 @@ class SvgIcon extends StatelessWidget {
   final Color? color;
   final bool keepOriginalColors;
 
+  /// Colors the parts of the SVG that use `currentColor`; with
+  /// [keepOriginalColors], everything else keeps its own color.
+  final Color? currentColor;
+
   @override
   Widget build(BuildContext context) {
     return SvgPicture.asset(
       asset,
+      theme: SvgTheme(currentColor: currentColor ?? const Color(0xFF000000)),
       width: size?.r,
       height: size?.r,
       colorFilter: keepOriginalColors

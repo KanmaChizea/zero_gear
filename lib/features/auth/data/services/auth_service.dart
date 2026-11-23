@@ -14,7 +14,9 @@ import '../repositories/google_sign_in_repository.dart';
 class AuthService extends Cubit<AuthActivity> {
   AuthService(this._repository, this._google, this._session)
     : super(AuthActivity.idle) {
-    _signedOut = _repository.signedOut.listen((_) => _session.clear());
+    _signedOut = _repository.signedOut.listen((_) {
+      if (!_deletingAccount) _session.clear();
+    });
   }
 
   final AuthRepository _repository;
@@ -22,6 +24,10 @@ class AuthService extends Cubit<AuthActivity> {
   final SessionCubit _session;
 
   late final StreamSubscription<void> _signedOut;
+
+  // Clearing the session redirects to login, which would skip the
+  // "account deleted" screen, so that waits for [completeAccountDeletion].
+  bool _deletingAccount = false;
 
   Future<void> restoreSession() async {
     if (_session.isResolved) return;
@@ -105,14 +111,19 @@ class AuthService extends Cubit<AuthActivity> {
         case Error(:final error):
           return Result.error(error);
         case Ok():
+          _deletingAccount = true;
           await _google.disconnect();
           await _repository.signOut();
-          await _session.clear();
           return const Result.ok(null);
       }
     } finally {
       emit(AuthActivity.idle);
     }
+  }
+
+  Future<void> completeAccountDeletion() async {
+    _deletingAccount = false;
+    await _session.clear();
   }
 
   Future<Result<User>> _withProfile(User user) async {

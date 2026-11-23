@@ -1,39 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import '../../../data/services/profile_service.dart';
-import '../../models/delete_account_ui_state.dart';
-import 'delete_account_view_model.dart';
+import 'package:zero_gear/core/router/app_route.dart';
+import 'package:zero_gear/core/utils/scale_util.dart';
+import 'package:zero_gear/core/widgets/buttons/button.dart';
+import 'package:zero_gear/core/widgets/containers/app_header.dart';
+import 'package:zero_gear/core/widgets/containers/app_screen.dart';
+import 'package:zero_gear/features/profile/ui/widgets/profile/profile_section.dart';
 
 class DeleteAccountView extends StatelessWidget {
   const DeleteAccountView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => DeleteAccountViewModel(
-        profileService: context.read<ProfileService>(),
+    return AppScreen(
+      header: const AppHeader(
+        title: 'Delete account',
+        text:
+            'This permanently deletes your account and everything in it. It cannot be undone.',
       ),
-      child: const _DeleteAccountBody(),
-    );
-  }
-}
-
-class _DeleteAccountBody extends StatelessWidget {
-  const _DeleteAccountBody();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Delete Account')),
-      body: BlocBuilder<DeleteAccountViewModel, DeleteAccountUiState>(
-        builder: (context, state) {
-          if (state.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          return const Center(child: Text('Delete Account'));
-        },
+      footer: Column(
+        spacing: 24.h,
+        children: [
+          Button(label: 'Keep my account', onPressed: context.pop),
+          Button(
+            label: 'Continue to delete',
+            onPressed: () => context.pushNamed(AppRoute.confirmDelete.name),
+            variant: ButtonVariant.outlined,
+          ),
+        ],
       ),
+      children: [
+        ProfileSection(
+          items:
+              [
+                    'Your profile and name',
+                    'Your workout history and calendar',
+                    'Your weight history and chart',
+                  ]
+                  .map(
+                    (e) => ProfileItem(
+                      label: e,
+                      trailing: Container(),
+                      onPressed: () {},
+                    ),
+                  )
+                  .toList(),
+        ),
+      ],
     );
   }
 }

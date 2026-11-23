@@ -18,7 +18,12 @@ class NotFoundView extends StatelessWidget {
     return AppScreen(
       children: [
         const Spacer(),
-        const SvgIcon(AppSvgs.sadBadge, size: 96, keepOriginalColors: true),
+        SvgIcon(
+          AppSvgs.sadBadge,
+          size: 96,
+          keepOriginalColors: true,
+          currentColor: colors.accentOn,
+        ),
         AppSpacing.v24,
         AppText(
           'Page not found',

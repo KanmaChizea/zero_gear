@@ -134,10 +134,8 @@ class WorkoutRepository {
     List<String> slugs,
   ) async {
     final result = await _client.request(
-      (db) => db
-          .from(Tables.exercises)
-          .select('id,slug')
-          .inFilter('slug', slugs),
+      (db) =>
+          db.from(Tables.exercises).select('id,slug').inFilter('slug', slugs),
     );
     return result.map(
       (rows) => {
