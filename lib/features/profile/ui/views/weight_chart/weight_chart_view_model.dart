@@ -1,14 +1,27 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zero_gear/core/utils/async_value.dart';
+import 'package:zero_gear/core/utils/result.dart';
+import 'package:zero_gear/features/profile/data/models/weight_summary.dart';
 
 import '../../../data/services/profile_service.dart';
-import '../../models/weight_chart_ui_state.dart';
 
-class WeightChartViewModel extends Cubit<WeightChartUiState> {
+class WeightChartViewModel extends Cubit<AsyncValue<WeightSummary>> {
   WeightChartViewModel({required this._profileService})
-    : super(const WeightChartUiState());
+    : super(AsyncValue.loading()) {
+    initialize();
+  }
 
-  // ignore: unused_field
   final ProfileService _profileService;
 
-  // TODO: add actions; change state with emit(state.copyWith(...)).
+  Future initialize() async {
+    emit(AsyncValue.loading());
+    final result = await _profileService.loadWeightSummary();
+    switch (result) {
+      case Ok(:final value):
+        emit(AsyncValue.data(value));
+        break;
+      case Error(:final error):
+        emit(AsyncValue.error(error.message));
+    }
+  }
 }
