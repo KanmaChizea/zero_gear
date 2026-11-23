@@ -14,7 +14,7 @@ enum AppRoute {
   activeWorkout('active-workout'),
   workoutComplete('workout-complete'),
   dayDetail('day-detail/:day([1-9]\\d*)'),
-  exerciseDetail('exercise-detail'),
+  exerciseDetail('exercise-detail/:repCount'),
   workoutRecord('workout-record/:date(\\d{4}-\\d{2}-\\d{2})'),
   profile('/profile'),
   profileInfo('profile-info'),

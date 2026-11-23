@@ -1,3 +1,4 @@
+import 'package:zero_gear/features/home/data/models/exercise.dart';
 import 'package:zero_gear/features/home/ui/views/active_stretch/active_stretch_view.dart';
 import 'package:zero_gear/features/home/ui/views/active_workout/active_workout_view.dart';
 import 'package:zero_gear/features/home/ui/views/day_detail/day_detail_view.dart';
@@ -31,7 +32,12 @@ List<RouteBase> featureRoutes() => [
       AppRoute.dayDetail.toGoRoute(
         (state) => DayDetailView(day: int.parse(state.pathParameters['day']!)),
       ),
-      AppRoute.exerciseDetail.toGoRoute((_) => const ExerciseDetailView()),
+      AppRoute.exerciseDetail.toGoRoute(
+        (state) => ExerciseDetailView(
+          exercise: state.extra as Exercise,
+          repCount: state.pathParameters['repCount'] ?? '',
+        ),
+      ),
       AppRoute.workoutRecord.toGoRoute(
         (state) => WorkoutRecordView(
           date: DateTime.parse(state.pathParameters['date']!),

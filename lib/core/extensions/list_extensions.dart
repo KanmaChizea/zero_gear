@@ -10,3 +10,7 @@ extension ListExtension<T> on List<T> {
 extension ListNullExtension on List? {
   bool get isNullOrEmpty => this == null || this!.isEmpty;
 }
+
+extension ListNullableExtension<T> on List<T?> {
+  List<T> removeNull() => whereType<T>().toList();
+}

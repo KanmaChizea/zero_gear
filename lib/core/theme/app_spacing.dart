@@ -28,6 +28,7 @@ abstract final class AppSpacing {
   static EdgeInsets get padding10 => EdgeInsets.all(10.r);
   static EdgeInsets get padding12 => EdgeInsets.all(12.r);
   static EdgeInsets get padding16 => EdgeInsets.all(16.r);
+  static EdgeInsets get padding24 => EdgeInsets.all(24.r);
 
   static EdgeInsets symmetricPadding({double? horizontal, double? vertical}) =>
       EdgeInsets.symmetric(
