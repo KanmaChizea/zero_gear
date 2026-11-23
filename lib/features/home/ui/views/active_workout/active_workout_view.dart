@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:zero_gear/core/extensions/string_extensions.dart';
+import 'package:zero_gear/core/audio/audio_guide.dart';
 import 'package:zero_gear/core/router/app_route.dart';
 import 'package:zero_gear/core/shared_features/session/data/services/session_cubit.dart';
 import 'package:zero_gear/core/theme/theme.dart';
@@ -32,6 +33,7 @@ class ActiveWorkoutView extends StatelessWidget {
       create: (context) => ActiveWorkoutViewModel(
         workoutService: context.read<WorkoutService>(),
         session: context.read<SessionCubit>(),
+        audio: context.read<AudioGuide>(),
       ),
       child: const _ActiveWorkoutBody(),
     );

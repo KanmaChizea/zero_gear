@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zero_gear/core/audio/audio_guide.dart';
 import 'package:zero_gear/core/router/app_route.dart';
+import 'package:zero_gear/core/shared_features/session/data/services/session_cubit.dart';
 import 'package:zero_gear/core/theme/theme.dart';
 import 'package:zero_gear/core/utils/scale_util.dart';
 import 'package:zero_gear/core/widgets/buttons/button.dart';
@@ -40,6 +42,8 @@ class ActiveStretchView extends StatelessWidget {
       create: (context) => ActiveStretchViewModel(
         planService: context.read<PlanService>(),
         workoutService: context.read<WorkoutService>(),
+        session: context.read<SessionCubit>(),
+        audio: context.read<AudioGuide>(),
         phase: phase,
         day: day,
       ),

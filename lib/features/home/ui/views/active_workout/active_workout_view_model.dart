@@ -1,8 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zero_gear/core/audio/audio_guide.dart';
 import 'package:zero_gear/core/shared_features/session/data/services/session_cubit.dart';
 import 'package:zero_gear/core/utils/async_value.dart';
 import 'package:zero_gear/core/utils/result.dart';
 
+import '../../../data/models/exercise_script.dart';
+import '../../../data/models/plan_exercise.dart';
 import '../../../data/services/workout_service.dart';
 import '../../models/active_workout_ui_state.dart';
 
@@ -10,12 +15,27 @@ class ActiveWorkoutViewModel extends Cubit<ActiveWorkoutUiState> {
   ActiveWorkoutViewModel({
     required this._workoutService,
     required this._session,
+    required this._audio,
   }) : super(ActiveWorkoutUiState.initial()) {
     initialize();
   }
 
   final WorkoutService _workoutService;
   final SessionCubit _session;
+  final AudioGuide _audio;
+
+  @override
+  Future<void> close() {
+    _audio.stop(owner: this);
+    return super.close();
+  }
+
+  /// Reads the exercise aloud when the user has audio instructions on.
+  void _announce(PlanExercise? exercise) {
+    if (exercise == null) return;
+    if (!(_session.user?.profile?.audioInstructions ?? false)) return;
+    _audio.speak(exercise.workoutScript, owner: this);
+  }
 
   Future<void> initialize() async {
     emit(ActiveWorkoutUiState.initial());
@@ -27,6 +47,7 @@ class ActiveWorkoutViewModel extends Cubit<ActiveWorkoutUiState> {
             : AsyncValue.data(active),
       ),
     );
+    _announce(state.current);
   }
 
   Future<void> toggleSet(int exerciseIndex, int setIndex) async {
@@ -46,6 +67,7 @@ class ActiveWorkoutViewModel extends Cubit<ActiveWorkoutUiState> {
     final updated = await _workoutService.goToExercise(index);
     if (updated != null) {
       emit(state.copyWith(workout: AsyncValue.data(updated)));
+      _announce(state.current);
     }
   }
 
@@ -60,6 +82,7 @@ class ActiveWorkoutViewModel extends Cubit<ActiveWorkoutUiState> {
         (_session.user?.profile?.postWorkoutStretch ?? false) &&
         active.day.coolDown.isNotEmpty;
 
+    unawaited(_audio.stop(owner: this));
     emit(state.copyWith(isFinishing: true));
     final result = await _workoutService.finish();
     switch (result) {

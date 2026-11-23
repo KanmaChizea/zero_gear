@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zero_gear/core/audio/audio_guide.dart';
 import 'package:zero_gear/core/shared_features/session/data/models/session_state.dart';
 import 'package:zero_gear/core/shared_features/session/data/services/session_cubit.dart';
 import 'package:zero_gear/core/network/network_client.dart';
@@ -47,8 +48,11 @@ class AppProvider extends StatelessWidget {
         BlocProvider.value(value: session),
         BlocProvider.value(value: themeCubit),
       ],
-      child: RepositoryProvider.value(
-        value: localStorage,
+      child: MultiRepositoryProvider(
+        providers: [
+          RepositoryProvider.value(value: localStorage),
+          RepositoryProvider(create: (_) => AudioGuide()),
+        ],
         child: MultiBlocProvider(
           providers: [
             BlocProvider.value(value: auth),
