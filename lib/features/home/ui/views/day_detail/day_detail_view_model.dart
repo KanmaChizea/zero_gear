@@ -1,14 +1,25 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zero_gear/core/utils/async_value.dart';
+import 'package:zero_gear/core/utils/result.dart';
+import 'package:zero_gear/features/home/data/models/plan_day.dart';
+import 'package:zero_gear/features/home/data/services/plan_service.dart';
 
-import '../../../data/services/home_service.dart';
-import '../../models/day_detail_ui_state.dart';
+class DayDetailViewModel extends Cubit<AsyncValue<PlanDay>> {
+  DayDetailViewModel({required PlanService planService, required this.day})
+    : _planService = planService,
+      super(AsyncValue.loading()) {
+    initialize();
+  }
 
-class DayDetailViewModel extends Cubit<DayDetailUiState> {
-  DayDetailViewModel({required this._homeService})
-    : super(const DayDetailUiState());
+  final PlanService _planService;
+  final int day;
 
-  // ignore: unused_field
-  final HomeService _homeService;
-
-  // TODO: add actions; change state with emit(state.copyWith(...)).
+  Future<void> initialize() async {
+    emit(AsyncValue.loading());
+    final result = await _planService.planDay(day);
+    emit(switch (result) {
+      Ok(:final value) => AsyncValue.data(value),
+      Error(:final error) => AsyncValue.error(error.message),
+    });
+  }
 }

@@ -9,6 +9,7 @@ import 'workout_service.dart';
 
 import '../models/active_workout.dart';
 import '../models/home_summary.dart';
+import '../models/plan_day.dart';
 import '../models/plan_day_summary.dart';
 import '../models/progress_rating.dart';
 import '../models/workout_history.dart';
@@ -31,9 +32,13 @@ class HomeService extends Cubit<HomeSummary?> {
     final history = await _workouts.history(refresh: refresh);
     return history.andThen<HomeSummary>((history) async {
       final next = await _plan.summaryFor(history.nextDay);
-      final summary = next.map(
-        (nextDay) => _summarize(profile, history, nextDay, active),
-      );
+      final summary = await next.andThen<HomeSummary>((nextDay) async {
+        final plan = await _plan.planDay(history.nextDay);
+        return plan.map(
+          (nextPlan) =>
+              _summarize(profile, history, nextDay, nextPlan, active),
+        );
+      });
       if (summary case Ok(:final value)) emit(value);
       return summary;
     });
@@ -61,6 +66,7 @@ class HomeService extends Cubit<HomeSummary?> {
     Profile profile,
     WorkoutHistory history,
     PlanDaySummary nextDay,
+    PlanDay nextPlan,
     ActiveWorkout? active,
   ) {
     final today = DateTime.now().dateOnly;
@@ -83,6 +89,7 @@ class HomeService extends Cubit<HomeSummary?> {
     return HomeSummary(
       profile: profile,
       nextDay: nextDay,
+      nextPlan: nextPlan,
       todayWorkout: history.on(today),
       activeWorkout: active,
       stats: HomeStats(

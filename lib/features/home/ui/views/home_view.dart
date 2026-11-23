@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:zero_gear/core/constants/app_svgs.dart';
 import 'package:zero_gear/core/router/app_route.dart';
 import 'package:zero_gear/core/theme/theme.dart';
 import 'package:zero_gear/core/utils/scale_util.dart';
 import 'package:zero_gear/core/widgets/containers/app_screen.dart';
+import 'package:zero_gear/core/widgets/feedback/app_toast.dart';
+import 'package:zero_gear/core/widgets/feedback/error_view.dart';
 import 'package:zero_gear/core/widgets/icons/app_logo.dart';
 import 'package:zero_gear/core/widgets/icons/svg_icon.dart';
+import 'package:zero_gear/features/home/ui/widgets/home/progress_calendar.dart';
+import 'package:zero_gear/features/home/ui/widgets/home/progress_summary.dart';
+import 'package:zero_gear/features/home/ui/widgets/home/todays_card.dart';
 
 import '../../data/services/home_service.dart';
+import '../../data/services/workout_service.dart';
 import '../models/home_ui_state.dart';
 import 'home_view_model.dart';
 
@@ -18,8 +25,10 @@ class HomeView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) =>
-          HomeViewModel(homeService: context.read<HomeService>()),
+      create: (context) => HomeViewModel(
+        homeService: context.read<HomeService>(),
+        workoutService: context.read<WorkoutService>(),
+      ),
       child: const _HomeBody(),
     );
   }
@@ -30,7 +39,15 @@ class _HomeBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<HomeViewModel, HomeUiState>(
+    final viewModel = context.read<HomeViewModel>();
+    return BlocConsumer<HomeViewModel, HomeUiState>(
+      listenWhen: (previous, current) =>
+          previous.errorMessage != current.errorMessage,
+      listener: (context, state) {
+        if (state.errorMessage == null) return;
+        viewModel.clearError();
+        AppToast.error(context, title: state.errorMessage!);
+      },
       builder: (context, state) {
         return AppScreen(
           header: Row(
@@ -56,7 +73,45 @@ class _HomeBody extends StatelessWidget {
               ),
             ],
           ),
-          children: [],
+          children: [
+            state.summary.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              data: (data) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  spacing: 24.h,
+                  children: [
+                    TodaysCard(
+                      data: data,
+                      isStarting: state.isStarting,
+                      isGivingUp: state.isGivingUp,
+                      onStart: () async {
+                        final started = await viewModel.start();
+                        if (!started || !context.mounted) return;
+                        final route = data.profile.preWorkoutStretch
+                            ? AppRoute.stretchOffer
+                            : AppRoute.activeWorkout;
+                        context.pushNamed(route.name);
+                      },
+                      onResume: () =>
+                          context.pushNamed(AppRoute.activeWorkout.name),
+                      onGiveUp: viewModel.giveUp,
+                    ),
+                    ProgressSummary(summary: data),
+                    ProgressCalendar(
+                      data: data.calendar,
+                      startDate: data.profile.startedAt,
+                    ),
+                  ],
+                );
+              },
+              error: (error) => ErrorView(
+                title: 'Error',
+                text: error,
+                onRetry: viewModel.initialize,
+              ),
+            ),
+          ],
         );
       },
     );

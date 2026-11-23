@@ -1,6 +1,7 @@
 import 'active_workout.dart';
 import 'package:equatable/equatable.dart';
 import 'package:zero_gear/core/shared_features/session/data/models/profile.dart';
+import 'plan_day.dart';
 import 'plan_day_summary.dart';
 import 'progress_rating.dart';
 import 'workout_status.dart';
@@ -30,6 +31,7 @@ class HomeSummary extends Equatable {
   const HomeSummary({
     required this.profile,
     required this.nextDay,
+    required this.nextPlan,
     required this.todayWorkout,
     required this.activeWorkout,
     required this.stats,
@@ -41,6 +43,7 @@ class HomeSummary extends Equatable {
   final Profile profile;
 
   final PlanDaySummary nextDay;
+  final PlanDay nextPlan;
 
   final WorkoutSummary? todayWorkout;
 
@@ -57,6 +60,7 @@ class HomeSummary extends Equatable {
   List<Object?> get props => [
     profile,
     nextDay,
+    nextPlan,
     todayWorkout,
     activeWorkout,
     stats,
@@ -81,3 +85,14 @@ class PlanListing extends Equatable {
   @override
   List<Object?> get props => [days, statusByDay, nextDay];
 }
+
+// enum ProgressRating {
+//   none('NOT RATED YET'),
+//   good('GOOD'),
+//   great('GREAT'),
+//   needsWork('NEEDS WORK');
+
+//   final String label;
+
+//   const ProgressRating(this.label);
+// }

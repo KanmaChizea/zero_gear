@@ -1,17 +1,35 @@
 import 'package:equatable/equatable.dart';
+import 'package:zero_gear/core/utils/async_value.dart';
+import 'package:zero_gear/features/home/data/models/home_summary.dart';
 
 class HomeUiState extends Equatable {
-  const HomeUiState({this.isLoading = false, this.errorMessage});
+  const HomeUiState({
+    required this.summary,
+    this.isStarting = false,
+    this.isGivingUp = false,
+    this.errorMessage,
+  });
 
-  final bool isLoading;
+  final AsyncValue<HomeSummary> summary;
+  final bool isStarting;
+  final bool isGivingUp;
   final String? errorMessage;
 
-  @override
-  List<Object?> get props => [isLoading, errorMessage];
+  bool get isBusy => isStarting || isGivingUp;
 
-  HomeUiState copyWith({bool? isLoading, String? Function()? errorMessage}) {
+  @override
+  List<Object?> get props => [summary, isStarting, isGivingUp, errorMessage];
+
+  HomeUiState copyWith({
+    AsyncValue<HomeSummary>? summary,
+    bool? isStarting,
+    bool? isGivingUp,
+    String? Function()? errorMessage,
+  }) {
     return HomeUiState(
-      isLoading: isLoading ?? this.isLoading,
+      summary: summary ?? this.summary,
+      isStarting: isStarting ?? this.isStarting,
+      isGivingUp: isGivingUp ?? this.isGivingUp,
       errorMessage: errorMessage != null ? errorMessage() : this.errorMessage,
     );
   }

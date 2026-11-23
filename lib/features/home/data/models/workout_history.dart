@@ -31,6 +31,15 @@ class WorkoutHistory {
 
   int dayOf(WorkoutSummary workout) => _dayByDate[workout.localDate] ?? nextDay;
 
+  WorkoutSummary? forDay(int day) {
+    WorkoutSummary? found;
+    for (final workout in workouts) {
+      if (dayOf(workout) != day) continue;
+      if (found?.status != WorkoutStatus.completed) found = workout;
+    }
+    return found;
+  }
+
   Map<DateTime, WorkoutStatus> get statusByDate => {
     for (final workout in workouts) workout.localDate: workout.status,
   };

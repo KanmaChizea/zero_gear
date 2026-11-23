@@ -1,8 +1,11 @@
 import 'package:zero_gear/features/home/ui/views/active_stretch/active_stretch_view.dart';
 import 'package:zero_gear/features/home/ui/views/active_workout/active_workout_view.dart';
+import 'package:zero_gear/features/home/ui/views/day_detail/day_detail_view.dart';
+import 'package:zero_gear/features/home/ui/views/exercise_detail/exercise_detail_view.dart';
 import 'package:zero_gear/features/home/ui/views/home_view.dart';
 import 'package:zero_gear/features/home/ui/views/stretch_offer/stretch_offer_view.dart';
 import 'package:zero_gear/features/home/ui/views/workout_complete/workout_complete_view.dart';
+import 'package:zero_gear/features/home/ui/views/workout_record/workout_record_view.dart';
 import 'package:zero_gear/features/profile/ui/views/account_deleted/account_deleted_view.dart';
 import 'package:zero_gear/features/profile/ui/views/appearance/appearance_view.dart';
 import 'package:zero_gear/features/profile/ui/views/confirm_delete/confirm_delete_view.dart';
@@ -25,6 +28,15 @@ List<RouteBase> featureRoutes() => [
       AppRoute.activeStretch.toGoRoute((_) => const ActiveStretchView()),
       AppRoute.activeWorkout.toGoRoute((_) => const ActiveWorkoutView()),
       AppRoute.workoutComplete.toGoRoute((_) => const WorkoutCompleteView()),
+      AppRoute.dayDetail.toGoRoute(
+        (state) => DayDetailView(day: int.parse(state.pathParameters['day']!)),
+      ),
+      AppRoute.exerciseDetail.toGoRoute((_) => const ExerciseDetailView()),
+      AppRoute.workoutRecord.toGoRoute(
+        (state) => WorkoutRecordView(
+          date: DateTime.parse(state.pathParameters['date']!),
+        ),
+      ),
     ],
   ),
   AppRoute.profile.toGoRoute(

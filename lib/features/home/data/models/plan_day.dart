@@ -42,6 +42,13 @@ class PlanDay extends Equatable {
   final List<String> focusMuscles;
   final List<PlanExercise> exercises;
 
+  static const _minutesPerSet = 1.7;
+
+  int get estimatedMinutes {
+    final sets = main.fold<int>(0, (sum, line) => sum + line.sets);
+    return (sets * _minutesPerSet / 5).round() * 5;
+  }
+
   List<PlanExercise> get warmUp => _phase(DayPhase.warmup);
 
   List<PlanExercise> get main => _phase(DayPhase.main);

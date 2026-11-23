@@ -1,21 +1,17 @@
 import 'package:equatable/equatable.dart';
+import 'package:zero_gear/core/utils/async_value.dart';
+
+import '../../data/models/workout_record.dart';
 
 class WorkoutRecordUiState extends Equatable {
-  const WorkoutRecordUiState({this.isLoading = false, this.errorMessage});
+  const WorkoutRecordUiState({required this.record});
 
-  final bool isLoading;
-  final String? errorMessage;
+  /// Null data when nothing was recorded on the selected date.
+  final AsyncValue<WorkoutRecord?> record;
+
+  factory WorkoutRecordUiState.initial() =>
+      WorkoutRecordUiState(record: AsyncValue.loading());
 
   @override
-  List<Object?> get props => [isLoading, errorMessage];
-
-  WorkoutRecordUiState copyWith({
-    bool? isLoading,
-    String? Function()? errorMessage,
-  }) {
-    return WorkoutRecordUiState(
-      isLoading: isLoading ?? this.isLoading,
-      errorMessage: errorMessage != null ? errorMessage() : this.errorMessage,
-    );
-  }
+  List<Object?> get props => [record];
 }

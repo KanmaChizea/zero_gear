@@ -1,192 +1,121 @@
-# project_starter
+# Zero Gear
 
-A Flutter boilerplate for mobile apps (iOS + Android).
+A home strength-training app for beginners. No equipment, bodyweight only. The user gets a plan of numbered days (Day 1, Day 2, ...), does each day whenever they like, and ticks off sets as they go. Each exercise has a GIF and form guidance. The plan leans on gender: more leg and glute days for women, more arms and chest for men.
+
+Flutter (iOS and Android), Supabase backend on the free tier, Google sign-in only. Designs are in [Figma](https://www.figma.com/design/geIWtrJAWP4Nn3bUIKkROU/Workout).
+
+## Status
+
+| Area | State |
+|---|---|
+| Sign-in (Google), session restore, sign out, account deletion | Done |
+| Onboarding (gender, height, weight) | Done |
+| Profile: info, height and weight, weight chart, appearance, delete account | Done |
+| Plan, workout, history and Home data layer (`features/home/data`) | Done, not compiled against a device yet |
+| Home screens: Home, stretch offer, active stretch, active workout, workout complete, day detail, exercise detail, workout record | Scaffolds only (`features/home/ui`). The first four after Home have routes; day detail, exercise detail and workout record are not routed yet |
+| Profile toggles (stretches, audio), change password | Not built |
+
+Product decisions are in the project doc `product-decisions.md`; backend decisions and the schema are in `backend-decisions.md` and `backend-schema.sql`.
 
 ## Requirements
 
 - Flutter 3.44+ (Dart 3.12+)
-- Xcode (for iOS) and Android SDK (for Android)
+- Xcode (iOS) and the Android SDK (Android)
+- A Supabase project (see [Backend](#backend-supabase))
 
-## Starting a new app from this template
+## Setup
 
-Rename the app before anything else:
+1. `flutter pub get`
+2. Create `.env` in the project root (it is gitignored and bundled as an asset):
 
-```sh
-dart run tool/rename.dart --name "My App" --id com.acme.myapp --package my_app
-flutter clean && flutter pub get
-```
+   ```
+   BASE_URL=https://<project>.supabase.co
+   PUBLISHABLE_KEY=<Supabase publishable key>
+   REDIRECT_URL=<OAuth redirect URL>
+   GOOGLE_WEB_CLIENT_ID=<Google web client ID>
+   GOOGLE_IOS_CLIENT_ID=<Google iOS client ID>
+   GOOGLE_ANDROID_CLIENT_ID=<Google Android client ID>
+   ```
 
-| Option | What it changes |
-|---|---|
-| `--name` | Display name on both platforms and in `Flavor`. Flavor suffixes are added automatically: `My App Dev`, `My App Staging`, and plain `My App` for prod. |
-| `--id` | Android `applicationId` + `namespace` (and moves `MainActivity.kt` to the new package), iOS `PRODUCT_BUNDLE_IDENTIFIER` (`RunnerTests` becomes `<id>.RunnerTests`). |
-| `--package` | Dart package name in `pubspec.yaml`, all `package:` imports, iOS `CFBundleName`, and the IntelliJ `.iml` files. |
+   `EnvConfig.init` (`lib/core/config/env_config.dart`) fails at startup if any key is missing. Read values through `EnvConfig`. To add one, add the key to `.env`, a getter and its entry in the required list.
 
-All options are optional — pass only what you want to change. The script can be re-run any time.
+   > `.env` is bundled into the app and can be read by anyone with the APK or IPA. Keep only the publishable key and client IDs in it, never a service-role key.
 
-The ID is shared by Android and iOS, so it may only contain letters and digits separated by dots (`com.acme.myapp`); `_` and `-` are rejected because each is invalid on one of the platforms.
-
-In VS Code you can run the same thing via **Tasks: Run Task → Rename app** (leave a prompt blank to keep the current value).
-
-> After changing the ID, update anything registered against the old one: Firebase/Google config files, Apple Developer / App Store Connect, Play Console, OAuth redirect URIs, etc.
+3. `flutter run`
 
 ## Flavors
 
-| Flavor | App name | App/bundle ID |
-|---|---|---|
-| `dev` (default) | `<Name> Dev` | same for all flavors |
-| `staging` | `<Name> Staging` | same for all flavors |
-| `prod` | `<Name>` | same for all flavors |
+| Flavor | App name |
+|---|---|
+| `dev` | Zero Gear Dev |
+| `staging` | Zero Gear Staging |
+| `prod` (default) | Zero Gear |
 
-All flavors share one application/bundle ID (to simplify third-party integrations), so **only one flavor can be installed on a device at a time**.
+All three share one application and bundle ID (`com.zero.gear`), so only one flavor can be installed on a device at a time. `Flavor.current` (`lib/core/config/flavor.dart`) is resolved from Flutter's `appFlavor`; no `--dart-define` is needed. Flavors only change the app name today: they all read the same `.env`.
 
-In Dart, the current flavor is available as `Flavor.current` (`lib/core/config/flavor.dart`), resolved from Flutter's `appFlavor`. No `--dart-define` is needed.
+- **Android**: `productFlavors` in `android/app/build.gradle.kts`.
+- **iOS**: build configurations `{Debug,Release,Profile}-{dev,staging,prod}` and schemes `dev`, `staging` and `prod`. The app name is the `APP_DISPLAY_NAME` build setting. In Xcode, pick a flavor scheme (there is no `Runner` scheme).
+- **Default**: `default-flavor: prod` in `pubspec.yaml`, so a plain `flutter run` is the prod flavor.
 
-Where flavors are configured:
-
-- **Android** — `productFlavors` in `android/app/build.gradle.kts` (app name via `resValue`).
-- **iOS** — build configurations `{Debug,Release,Profile}-{dev,staging,prod}` and schemes `dev` / `staging` / `prod` in `ios/Runner.xcodeproj`. The app name comes from the `APP_DISPLAY_NAME` build setting. In Xcode, pick a flavor scheme (there is no `Runner` scheme).
-- **Default flavor** — `default-flavor: dev` in `pubspec.yaml`, so a plain `flutter run` uses `dev`.
-
-### Adding a flavor
-
-1. Add a `create("<flavor>")` block to `android/app/build.gradle.kts`.
-2. In Xcode, duplicate the `Debug`/`Release`/`Profile` configurations as `*-<flavor>` (set `APP_DISPLAY_NAME`), and duplicate a scheme named `<flavor>` using them.
-3. Add the value to the `Flavor` enum.
-4. Add its suffix (or `''` for none) to `flavorSuffixes` in `tool/rename.dart`, and to `.vscode/launch.json` / `tasks.json`.
-5. Create `env/.env.<flavor>` with every key and add it to the flavor-specific assets in `pubspec.yaml`.
-
-### Environment config
-
-Per-flavor values live in `env/.env.dev`, `env/.env.staging` and `env/.env.prod`:
-
-```
-BASE_URL=https://api.dev.example.com
-```
-
-`main()` calls `EnvConfig.init(Flavor.current)`, which loads the matching file and fails fast if a required key is missing. Read values through `EnvConfig` (`lib/core/config/env_config.dart`), e.g. `EnvConfig.baseUrl`. `EnvConfig` only returns env values; for flavor checks use `Flavor.current` (`Flavor.current.isProd`).
-
-Each file is declared as a flavor-specific asset in `pubspec.yaml`, so a build only bundles its own flavor's file (a prod build contains no dev or staging URLs).
-
-To add a value: add the key to all three files, then a getter in `EnvConfig` and the key to its required list in `init`.
-
-> Env files are bundled into the app and can be read by anyone with the APK/IPA. Use them for configuration (URLs, feature flags), not secrets.
-
-## Running
+## Running and building
 
 ```sh
-flutter run                          # dev
+flutter run --flavor dev
 flutter run --flavor staging
 flutter run --flavor prod --release
-```
 
-In VS Code, pick a configuration in **Run and Debug** (`Dev (debug)`, `Staging (profile)`, `Prod (release)`, …).
-
-## Building
-
-```sh
 flutter build apk       --flavor <flavor> --release
 flutter build appbundle --flavor <flavor> --release
 flutter build ipa       --flavor <flavor> --release
 ```
 
-Outputs land in `build/app/outputs/` (Android) and `build/ios/ipa/` (iOS).
+In VS Code, pick a configuration under **Run and Debug**, or run a build from **Tasks: Run Task** (`Build: Android APK`, `Build: Android App Bundle`, `Build: iOS IPA`, `Build: All platforms`).
 
-In VS Code: **Tasks: Run Task** (or `Cmd+Shift+B`) → `Build: Android APK`, `Build: Android App Bundle`, `Build: iOS IPA`, `Build: iOS (no codesign)`, or `Build: All platforms`. Each asks for the flavor and build mode.
+> Android release builds are signed with the debug key. Add a release `signingConfig` before publishing.
 
-> Android release builds are currently signed with the debug key. Configure a release `signingConfig` before publishing.
+There are no automated tests in this project (see `AGENTS.md`). Check changes with `flutter analyze` and by running the app.
 
 ## Project structure
 
-Feature-first MVVM with a **data** and **ui** layer per feature. Each feature lives in `lib/features/<feature>/`; app-wide code lives in `lib/core/`.
+Feature-first MVVM: each feature has a `data` layer and a `ui` layer, and app-wide code lives in `lib/core/`.
 
 ```
 lib/
+  main.dart                       # Supabase init, builds the session and AuthService, restores the session, runs App
+  provider.dart                   # AppProvider: app-wide Cubits and services; resets them when the session ends
   core/
-    config/
-      flavor.dart                 # Flavor enum + Flavor.current
-      env_config.dart             # EnvConfig: per-flavor values from env/.env.<flavor>
-    constants/
-      endpoints.dart              # Endpoints: API paths (for ApiClient; the Supabase backend does not use it)
-      supabase_names.dart         # Tables and Rpc: Supabase table and function names
-      app_layout.dart             # AppLayout: tablet breakpoint and max widths for content, catalog, auth forms
-      app_svgs.dart               # AppSvgs: SVG asset paths (assets/svgs/)
-      app_images.dart             # AppImages: image asset paths (assets/images/)
-    router/
-      app_route.dart              # AppRoute enum (name, path, isPublic)
-      app_router.dart             # GoRouter: combines route groups, 404, root redirect
-      auth_router.dart            # Auth routes (login, …) + auth redirect
-      feature_router.dart         # Feature routes (home, profile and their nested screens)
-      not_found_view.dart
-      stream_listenable.dart      # Adapts a Cubit stream to GoRouter.refreshListenable
-      navigation.dart             # popUntil / popUntilNamed for go_router
-    pagination/
-      paginated_data.dart         # PaginatedData<T>: one page of items + hasMore (returned by repositories)
-      paginated_state.dart        # PaginatedState<T>: items, nextPage, hasMore, isLoading, errorMessage
-      paginated_view_model.dart   # PaginatedViewModel<T>: base Cubit with loadNextPage / refresh
-    extensions/
-      string_extensions.dart      # toTitleCase, toSentenceCase, pluralSafe / plural, String?.isNullOrEmpty
-      list_extensions.dart        # firstWhereOrNull, List?.isNullOrEmpty
-      date_extensions.dart        # dateOnly, isoDate (yyyy-MM-dd), startOfWeek (Monday), daysSince
+    config/                       # Flavor (enum + Flavor.current), EnvConfig
+    constants/                    # supabase_names (tables, functions), app_svgs, app_images, app_layout, endpoints
+    extensions/                   # string, list and date helpers
     network/
-      api_client.dart             # ApiClient interface: every call returns Result<T> (the response body)
-      dio_api_client.dart         # DioApiClient: the Dio implementation
-      dio_exception_mapper.dart   # Default DioException → AppException mapping (used by the client)
-      network_exception.dart      # AppException subclasses: Network / Unauthorized / Server
-      auth_interceptor.dart       # Bearer token, 401 → refresh → retry
-      auth_tokens.dart            # Access + refresh token pair
-      logging_interceptor.dart    # Hooks AppLogger into Dio
-      network_client.dart         # NetworkClient: wraps the Supabase client; request() runs a call and returns Result<T>
-    storage/
-      secure_storage.dart         # SecureStorage: Keychain / Keystore wrapper (tokens, cached user)
-      local_storage.dart          # LocalStorage: shared_preferences wrapper for non-sensitive values
-      secure_session_storage.dart # SecureSessionStorage: keeps the Supabase session in the Keychain / Keystore
-    theme/
-      app_colors.dart             # AppColors: ThemeExtension with the Figma color tokens (light & dark)
-      app_spacing.dart            # AppSpacing: scaled SizedBox vertical/horizontal & EdgeInsets padding tokens
-      app_text_styles.dart        # AppTextStyles: the Figma text styles in Inter + TextStyle.weight extension
-      app_theme.dart              # AppTheme: ThemeData for light and dark modes
-      theme_cubit.dart            # ThemeCubit: manages & persists ThemeMode (system, light, dark)
-    shared_features/              # Data layers used by several features: <name>/data/{models,repositories,services}
-      session/                    # SessionCubit, SessionState, User, Profile, Gender: who is signed in, with their profile
+      network_client.dart         # NetworkClient: runs Supabase calls and returns Result<T>
+      network_exception.dart      # Network / Unauthorized / Server exceptions
+    pagination/                   # PaginatedViewModel, PaginatedState, PaginatedData (available, unused so far)
+    router/                       # AppRoute, GoRouter, auth redirect, feature routes, 404
+    shared_features/
+      session/                    # SessionCubit, SessionState, User, Profile, Gender
+    storage/                      # SecureStorage, LocalStorage, SecureSessionStorage
+    theme/                        # AppColors, AppTextStyles, AppSpacing, AppTheme, ThemeCubit
+    utils/                        # Result, AppException, AsyncValue, AppLogger, ScaleUtil, formatters, validators
     widgets/
-      feedback/                   # Loader (full-screen logo loader), LoaderHost
-      buttons/                    # App-wide button components
-      containers/                 # App-wide card/container wrappers
-        content_width.dart        # ContentWidth: centres a child and caps its width on tablets
-      controls/                   # Toggles, checkboxes, switches, sliders
-      icons/                      # SvgIcon
-      inputs/                     # Text fields, selectors, form inputs
-      lists/                      # PaginatedListView, PaginatedSliverList
-      modals/                     # Dialogs, bottom sheets, alerts
-      text/                       # AppText, AppRichText + AppTextSpan
-      widget.dart                 # Root barrel export for core widgets
-    utils/
-      result.dart                 # Result<T>: Ok / Error(AppException) + map / fold / andThen
-      json_utils.dart             # jsonStrings: a JSON string array, or empty
-      app_exception.dart          # AppException(message, statusCode) + Parse / Unknown
-      async_value.dart            # AsyncValue<T>: loading / data / error for UI state
-      app_logger.dart             # AppLogger: boxed debug logs (log, logRequest/Response/Error)
-      scale_util.dart             # ScaleUtil: scales sizes from the design frame to the device (w, h, sp), capped for tablets
+      buttons/                    # Button, AppBackButton
+      containers/                 # AppScreen, AppHeader, AppCard, ContentWidth, AppStepper
+      controls/                   # AppSwitch, AppCheckbox
+      feedback/                   # Loader + LoaderHost, AppToast, ErrorView
+      icons/                      # SvgIcon, AppLogo, CheckIcon
+      inputs/                     # InputField, RulerPicker
+      lists/                      # PaginatedListView
+      modals/                     # ConfirmationModal
+      text/                       # AppText, AppRichText
   features/
-    auth/
-      data/
-        models/                   # Entities and API request/response models for this feature
-        repositories/             # Data access: API/SDK/storage calls; parse responses, return typed models
-        services/                 # Business logic on entities; never sees raw JSON
-      ui/
-        models/                   # UI state, one per screen or flow (LoginUiState)
-        views/                    # Views and their view models side by side (login_view, login_view_model)
-        widgets/                  # Feature widgets (login_form, auth_text_field, ...)
-  main.dart                       # Entry point: creates the session and router, runs App (MaterialApp.router)
-  provider.dart                   # AppProvider: app-wide Cubits (BlocProvider) and services (RepositoryProvider)
-test/                             # Mirrors lib/
-tool/
-  rename.dart                     # App name / ID / package rename script
-  new_feature.dart                # Feature / screen scaffolding
-.vscode/
-  launch.json                     # Run configurations per flavor and mode
-  tasks.json                      # Build, rename and scaffolding tasks
+    auth/                         # Google sign-in, restore, sign out, delete account
+    profile/                      # Onboarding, profile, height and weight, weight chart, appearance, delete account
+    home/                         # Plan, workouts and Home: data layer plus the workout screens
+      data/{models,repositories,services}
+      ui/{models,views,widgets}
+assets/svgs/                      # Logo, icons, avatars (exported from Figma)
+.github/workflows/                # supabase-keep-alive.yml: pings Supabase twice a week so the free project is not paused
+tool/                             # rename.dart, new_feature.dart
 ```
 
 ### Dependency direction
@@ -194,336 +123,131 @@ tool/
 ```
 view → view model → service → repository
   ↓         ↓           ↓
-widgets  ui model    core/shared_features/session
+widgets  ui model    SessionCubit
 ```
 
-- `ui/` may import from `data/`; `data/` never imports from `ui/`.
-- Parsing and endpoint-specific error handling happen in repositories: they `map` API/storage responses into typed models (entities, or result types like `SignInResult` in `data/models/`), special-case errors where an endpoint needs it, and return a `Result`. If the backend's shape differs from an entity, parse into a response model in `data/models/` and convert it inside the repository. Services and view models never see raw JSON.
-- Views talk to their view model for screen state and actions, and may read app-wide state (`SessionCubit`) directly. View models depend on services, never on repositories.
-- Exception: a view with no UI state that only triggers a one-off call may call its feature's service directly instead of having a view model.
-- Features never import other features, with one exception: any feature may use `AuthService` (auth underpins the whole app, e.g. Profile signs out through it). Anything else several features need lives in `core/` (e.g. `core/shared_features/session`, `core/router`).
-- Data used by more than one feature (repositories, services and models) lives in `core/shared_features/<name>/data/`, laid out like a feature's `data/` folder. Features import it from there. Shared features never import features, and never import each other, except that any of them may use `session`. A feature that combines shared services into one screen's data keeps that service in its own `data/` (e.g. `HomeService`).
-- Services are Cubits: `class ProfileService extends Cubit<ProfileState>`. The state is the data the service is the source of truth for, so view models can listen to it, and the methods that load or change data return a `Result`. `AppProvider` provides each one with `BlocProvider`, and `clearAll` resets them when the user signs out.
-- `core/` doesn't import from `features/`, with one exception: the route tables in `core/router/` (`auth_router.dart`, `feature_router.dart`) import feature views to register them.
-- Widgets get state and callbacks via constructors; they don't talk to view models.
-- One-off effects (navigation, snackbars) go in a `BlocListener` in the view, not in `build`.
-- Imports outside the current feature use `package:` imports; relative imports only within a feature.
+- `ui/` may import `data/`; `data/` never imports `ui/`.
+- **Repositories** talk to the backend through `NetworkClient`, never the Supabase client directly. They parse responses into typed models and return a `Result`. Services and view models never see raw JSON.
+- **Services** are Cubits (`class ProfileService extends Cubit<ProfileState>`). The state is the data the service owns, and methods that load or change data return a `Result`. `AppProvider` provides each one and resets it when the user signs out.
+- **View models** are Cubits too (`LoginViewModel extends Cubit<LoginUiState>`) and depend on services, never on repositories. A view creates its own view model with `BlocProvider`, so it lives as long as the route. UI state classes are immutable, extend `Equatable` and expose `copyWith`.
+- **Views** talk to their view model, and may read app-wide state straight from `SessionCubit` (`context.select((SessionCubit s) => s.state.user)`). Widgets get state and callbacks through their constructors.
+- One-off effects (navigation, toasts) go in a `BlocListener`, not in `build`.
+- **Features never import other features.** The one exception is `AuthService`, which any feature may use. Data shared by several features lives in `core/shared_features/<name>/data/`. Shared features may import only `session`. Today that is just `session`. A feature that combines services into one screen's data keeps that service in its own `data/` (`HomeService`).
+- `core/` doesn't import from `features/`, except the route tables in `core/router/`, which register feature views.
+- Imports outside the current feature use `package:` imports; relative imports only inside a feature.
+
+### Features
+
+| Feature | Repositories | Services (state) | Owns |
+|---|---|---|---|
+| `auth` | `AuthRepository`, `GoogleSignInRepository` | `AuthService` (`AuthActivity`) | Google sign-in, session restore, sign out, account deletion |
+| `core/shared_features/session` | none | `SessionCubit` (`SessionState`) | The signed-in `User` and their `Profile` |
+| `profile` | `ProfileRepository` | `ProfileService` (`ProfileState`) | Onboarding, height and weight, weight history, feature toggles |
+| `home` | `PlanRepository`, `WorkoutRepository`, `WorkoutLocalRepository` | `PlanService`, `WorkoutService`, `HomeService` | The plan and exercise library, the workout in progress, saved workouts, the Home summary |
 
 ### Navigation
 
-[go_router](https://pub.dev/packages/go_router), configured in `lib/core/router/`:
-
-- `app_router.dart` creates the `GoRouter` and combines the route groups.
-- `auth_router.dart` holds the public auth routes and the auth redirect.
-- `feature_router.dart` holds the feature routes; screens of a flow are nested under their parent.
-
-| Route | Path | Notes |
-|---|---|---|
-| `login` | `/login` | Public. |
-| `home` | `/home` | |
-| `stretchOffer`, `activeStretch`, `activeWorkout`, `workoutComplete` | `/home/stretch-offer`, `/home/active-stretch`, `/home/active-workout`, `/home/workout-complete` | Nested under `home` |
-| `profile` | `/profile` | |
-| `profileInfo`, `updateHeightWeight`, `weightChart`, `appearance`, `deleteAccount` | `/profile/profile-info`, `/profile/update-height-weight`, `/profile/weight-chart`, `/profile/appearance`, `/profile/delete-account` | Nested under `profile` |
-| `confirmDelete` | `/profile/delete-account/confirm-delete` | Nested under `deleteAccount` |
-| `onboardingIntro`, `onboarding`, `onboardingComplete` | `/onboarding-intro`, `/onboarding`, `/onboarding-complete` | Signed-in users without a profile are sent here and can't leave until they have one. |
-| `accountDeleted` | `/account-deleted` | Public: the session is already gone when it shows. |
-
-- **Routes** are declared once in the `AppRoute` enum (`lib/core/router/app_route.dart`): the enum name is the route name, plus its path and whether it is public.
-- **Navigate by name** using the enum, never raw path strings:
-
-  ```dart
-  context.goNamed(AppRoute.home.name);
-  context.pushNamed(AppRoute.stretchOffer.name);
-  ```
-
-- **Pop until** a page further down the stack (`lib/core/router/navigation.dart`), mirroring `go` / `goNamed`:
-
-  ```dart
-  context.popUntilNamed(AppRoute.home.name);   // by route name
-  context.popUntil('/home');                   // by location
-  ```
-
-  Works from dialogs and with pushed routes, and keeps go_router's location in sync (unlike `Navigator.popUntil`). Does nothing if the target is not in the stack (asserts in debug). If a route on the way has an `onExit` (e.g. an "unsaved changes?" dialog), it stops there; call it again after the user confirms.
-- **Session restore**: `main()` builds `AuthService` and awaits `restoreSession()` before `runApp`, so the session is resolved before the router first redirects (the native splash covers the wait). The session starts from the one the Supabase SDK restored. If the profile fetch fails, a matching cached user is used so a transient error doesn't send the user to login.
-- **Auth redirect**: the router refreshes on every `SessionCubit` change (via `StreamListenable`). Signed out, any non-public route goes to `/login?from=<where you were going>`; after sign-in the user lands on `from` (only if it is an in-app path), otherwise `/home`. Signing out (`AuthService.signOut()`) calls `/auth/logout`, clears the session and returns to login. Views never navigate after restore/sign-in/sign-out themselves.
-- **Argument protection**: path parameters are constrained in the path pattern (`items/:id([1-9]\d*)`), so a malformed deep link such as `/home/items/abc` never matches and shows the 404 page. Builders can then parse safely. Pass IDs, not objects: `extra` is lost on deep links and app restarts.
-- **404**: any unmatched location renders `NotFoundView` with a way back home. `/` redirects to `/home`.
-
-#### Adding a route
-
-1. Add it to `AppRoute` (relative `path` if nested; constrain parameters with a regex).
-2. Register it with `AppRoute.x.toGoRoute((state) => XView(...))`: in `feature_router.dart` (under its parent's `routes` if nested) or in `auth_router.dart` for auth screens.
-
-### State management
-
-View models are Cubits from [`flutter_bloc`](https://pub.dev/packages/flutter_bloc): `LoginViewModel extends Cubit<LoginUiState>`.
-
-- UI state classes are immutable, extend `Equatable`, and expose `copyWith`. View models change state only with `emit(state.copyWith(...))`.
-- A view creates its own view model with `BlocProvider(create: ...)`, so the view model lives exactly as long as the route.
-- App-wide state and services are registered in `AppProvider` (`lib/provider.dart`): Cubits with `BlocProvider`, plain services with `RepositoryProvider`. Services that need the session take it in their constructor.
-- **Sign-out** belongs to auth: `AuthService.signOut()` awaits `/auth/logout` first, while the tokens still exist (an expired access token is refreshed so logout can still reach the server), then clears the session even if logout failed. The Profile view just calls `context.read<AuthService>().signOut()`.
-
-- **`AppProvider.clearAll(context)`** (`lib/provider.dart`) resets app-wide state. `AppProvider` runs it automatically whenever a signed-in session ends (a `BlocListener` on `SessionCubit`), so explicit sign-out and forced sign-outs (rejected token refresh, etc.) are all covered and nobody calls it by hand. When a service starts holding state (caches, sockets), give it a `reset()` and call it in `clearAll`.
-- **App-wide state in screens**: views read app-wide state such as the signed-in user straight from `SessionCubit` with `context.select((SessionCubit s) => s.state.user)` (see `ProfileView`). `select` rebuilds only when that value changes. View models hold screen-specific state and actions; they don't copy session data into their UI state, and feature services don't re-expose it. Put it in the view model only when the screen derives something from it together with its own data, or edits a copy of it.
-- Views rebuild with `BlocBuilder` / `BlocSelector` and run side effects with `BlocListener`.
-- View models are tested with `bloc_test` (`blocTest`), views with widget tests that provide fakes through `RepositoryProvider`.
-
-### Pagination
-
-Reusable infinite-scroll pagination lives in `lib/core/pagination/` and `lib/core/widgets/lists/`:
-
-- **Repository** returns `Result<PaginatedData<T>>`, mapping the API's pagination fields (page meta, cursors, totals) to `hasMore`.
-- **View model** extends `PaginatedViewModel<T>` and implements `fetchPage(int page)`. It provides `loadNextPage()` (ignored while a request is running or when there are no more pages) and `refresh()` (reloads from `firstPage`, which defaults to `1`; current items stay visible until it succeeds, and results from requests it replaced are dropped).
-- **View** renders `PaginatedListView<T>`. It shows a loader for the first page, an error with Retry, `emptyBuilder` when there are no items, and a loading or Retry footer below the items. It calls `onLoadMore` when the footer gets built, i.e. when the end of the list comes within the scroll view's cache extent (about 250px past the screen), and keeps loading while a page doesn't fill the screen. Pass `onRefresh` to enable pull to refresh.
+[go_router](https://pub.dev/packages/go_router), in `lib/core/router/`. Routes are declared once in the `AppRoute` enum (name, path, whether it is public) and registered with `AppRoute.x.toGoRoute(...)` in `auth_router.dart` or `feature_router.dart`. Navigate by name, never by path string:
 
 ```dart
-// Repository
-Future<Result<PaginatedData<Order>>> getOrders({required int page}) async {
-  final result = await _api.get<Map<String, dynamic>>(
-    Endpoints.orders,
-    query: {'page': page},
-  );
-  return result.map(
-    (json) => PaginatedData(
-      items: (json['data'] as List).map((e) => Order.fromJson(e)).toList(),
-      hasMore: json['meta']['current_page'] < json['meta']['last_page'],
-    ),
-  );
-}
-
-// View model
-class OrdersViewModel extends PaginatedViewModel<Order> {
-  OrdersViewModel({required this._orderService});
-
-  final OrderService _orderService;
-
-  @override
-  Future<Result<PaginatedData<Order>>> fetchPage(int page) =>
-      _orderService.getOrders(page: page);
-}
-
-// View
-BlocProvider(
-  create: (context) =>
-      OrdersViewModel(orderService: context.read<OrderService>())
-        ..loadNextPage(),
-  child: BlocBuilder<OrdersViewModel, PaginatedState<Order>>(
-    builder: (context, state) => PaginatedListView(
-      state: state,
-      itemBuilder: (context, order) => OrderTile(order),
-      onLoadMore: context.read<OrdersViewModel>().loadNextPage,
-      onRefresh: context.read<OrdersViewModel>().refresh,
-    ),
-  ),
-)
+context.goNamed(AppRoute.home.name);
+context.pushNamed(AppRoute.weightChart.name);
 ```
 
-**Inside a parent scroll view.** `PaginatedListView` owns its scrolling. When the list scrolls together with other content (a header, a banner, filters), make the parent a `CustomScrollView` and use `PaginatedSliverList<T>`, which takes the same arguments except `onRefresh` and `padding`. Wrap the `CustomScrollView` in a `RefreshIndicator` for pull to refresh, and use `SliverPadding` for padding. Only the items near the screen are built, however long the list gets.
+| Route | Path |
+|---|---|
+| `login` (public) | `/login` |
+| `home` | `/home` |
+| `stretchOffer`, `activeStretch`, `activeWorkout`, `workoutComplete`, `dayDetail`, `exerciseDetail`, `workoutRecord` | `/home/<name>` |
+| `profile` | `/profile` |
+| `profileInfo`, `updateHeightWeight`, `weightChart`, `appearance`, `deleteAccount` | `/profile/<name>` |
+| `confirmDelete` | `/profile/delete-account/confirm-delete` |
+| `onboardingIntro`, `onboarding`, `onboardingComplete` | `/onboarding-intro`, `/onboarding`, `/onboarding-complete` |
+| `accountDeleted` (public) | `/account-deleted` |
 
-```dart
-RefreshIndicator(
-  onRefresh: viewModel.refresh,
-  child: CustomScrollView(
-    slivers: [
-      const SliverToBoxAdapter(child: OrdersHeader()),
-      PaginatedSliverList(
-        state: state,
-        itemBuilder: (context, order) => OrderTile(order),
-        onLoadMore: viewModel.loadNextPage,
-      ),
-    ],
-  ),
-)
-```
+- **Startup**: `main()` builds `AuthService` and awaits `restoreSession()` before `runApp`, so the session is resolved before the router first redirects. The session comes from the one `supabase_flutter` restored from the device. If the profile fetch fails, a matching cached user is used, so a network error doesn't send the user to login.
+- **Auth redirect** (`authRedirect` in `auth_router.dart`): the router refreshes on every `SessionCubit` change. Signed out, any non-public route goes to `/login?from=<where you were going>`. Signed in, login goes to `from` (only in-app paths are honoured) or `/home`. A signed-in user without a profile can reach only the onboarding routes.
+- **Pop until**: `context.popUntilNamed(AppRoute.home.name)` and `context.popUntil('/home')` (`navigation.dart`) work with pushed routes and keep go_router's location in sync.
+- **404**: unmatched locations show `NotFoundView`. `/` redirects to `/home`.
 
-Don't put either widget in a `SingleChildScrollView`, a `Column` inside one, or a `shrinkWrap` list. Those build every item at once, so the footer is always built and every page would load straight away. In a `NestedScrollView`, use `PaginatedListView` as the `body`.
-
-If a screen needs extra state alongside the list, keep the `PaginatedViewModel` for the list and put the rest in a separate view model rather than widening `PaginatedState`.
-
-**App-wide lists.** When a list should be shared across screens and keep its loaded pages between visits (notifications, a feed), register the view model in `AppProvider` instead of creating it in the view:
-
-- Add it with `BlocProvider(create: ...)` in `AppProvider`; views read it with `BlocBuilder` / `context.read` and don't create it.
-- Start loading with `context.read<NotificationsViewModel>().loadIfEmpty()` when a view opens (e.g. in `initState`). It loads the first page only when nothing is loaded yet. Don't call `loadNextPage()` on open: once page 1 has loaded, each visit would fetch another page.
-- Call `reset()` in `AppProvider.clearAll` so the next user doesn't see the previous user's items. It also drops the result of any request still running.
-- When the app changes the data itself (marking a notification read, creating an order), add a method to the subclass that updates the list with `emit(state.copyWith(items: ...))` instead of refetching.
-
-### Theming
-
-Theme configuration lives in `lib/core/theme/`:
-
-- `AppColors` (`lib/core/theme/app_colors.dart`): `ThemeExtension<AppColors>` named after the Figma `Color` variables (`bg/primary` → `bgPrimary`) for light and dark: `bgPrimary`, `bgSecondary`, `bgTertiary`, `bgInverse`, `textPrimary`, `textSecondary`, `textInverse`, `borderDefault`, `borderStrong`, `accentPrimary` (Ember) and `accentOn`, `successPrimary` and `successOn`. `error` and `onError` are not in Figma yet. The accent, success and error colours are the same in both modes. Text on them is near black.
-- `AppTextStyles` (`lib/core/theme/app_text_styles.dart`): The Figma text styles in Inter, via `google_fonts`: `display` (30 bold), `title` (22 bold), `heading` (16 semibold), `body` (14), `bodyMedium` (14 medium), `caption` (12), `label` (11 semibold, letter-spaced, for uppercase labels) and `numeric` (64 bold, for big numbers). Sizes scale with `.sp`. There is also a `weight(FontWeight)` extension on `TextStyle` to rebuild styles with different font weights (e.g. `AppTextStyles.body.weight(FontWeight.bold)`).
-- `AppSpacing` (`lib/core/theme/app_spacing.dart`): Spacing tokens scaled with `ScaleUtil`: `SizedBox` vertical (`v4`-`v48`, scaled by height) and horizontal (`h4`-`h32`, scaled by width) gaps, plus `EdgeInsets` padding presets and helpers (`symmetricPadding`, `fromLTRB`, `only`) that scale horizontal values by width and vertical values by height. Tokens are getters, not `const`, because they depend on the screen size.
-- `AppText` (`lib/core/widgets/text/app_text.dart`): Reusable text widget with default theme typography and text color, accepting `style`, `color`, `textAlign`, `maxLines`, and `overflow`.
-- `ScaleUtil` (`lib/core/utils/scale_util.dart`): Scales design sizes to the current screen. Initialized in `main()` with the design frame (default `375 x 812`); pass `designWidth` / `designHeight` to `ScaleUtil.init` if your designs use a different frame. Use `ScaleUtil.w(...)` for widths, icons and horizontal padding, `ScaleUtil.h(...)` for heights and vertical spacing, and `ScaleUtil.sp(...)` for font sizes (dampened so text scales less than layout). Factors use the screen's shortest side for widths and longest side for heights, so they don't change with orientation, and are capped at `1.2` so phones scale exactly as designed while tablets don't render everything twice as large. They are first computed at startup in `main()`; `App` in `lib/main.dart` calls `ScaleUtil.update(MediaQuery.sizeOf(context))` from `MaterialApp.router`'s `builder`, so they are recalculated whenever the window size changes (rotation, iPad split view). Also exposes `num` extensions (`16.w`, `16.h`, `14.sp`, `8.r`, where `r` scales by width), which `AppSpacing` uses.
-- `AppLayout` (`lib/core/constants/app_layout.dart`): Tablet layout constants: `tabletBreakpoint` (600), and max widths for text-heavy screens (`maxContentWidth`), grids (`maxCatalogWidth`), and auth forms (`maxAuthFormWidth`). All are wider than a phone, so phones are unaffected.
-- `ContentWidth` (`lib/core/widgets/containers/content_width.dart`): Centres its `child` and stops it growing past `maxWidth` (default `AppLayout.maxContentWidth`) by adding horizontal inset on wider screens. Narrower screens get no extra padding. Wrap a screen body in it, e.g. `ContentWidth(child: ListView(...))`, or pass another width such as `AppLayout.maxAuthFormWidth`.
-- `ErrorView` (`lib/core/widgets/feedback/error_view.dart`): A centred error state for a screen or section that failed to load: the sad badge, `title`, `text` and a compact Try again `Button` that calls `onRetry`. `retryLabel` overrides the button text. Figma has no error design yet, so it reuses the not-found styling.
-- `AppCheckbox` (`lib/core/widgets/controls/checkbox.dart`): The Figma selection circle from the Appearance screen, 22 wide. Selected is filled Ember with the check in `accentOn`; unselected is a 2 `borderStrong` ring. Takes `value` and an optional `onPress`; the parent decides what selecting means (e.g. one of System / Light / Dark).
-- `AppSwitch` (`lib/core/widgets/controls/switch.dart`): The Figma toggle, 44x26. `value` sets the state (Ember when on, secondary text colour when off) and the optional `onPress` fires on tap; the parent flips `value`. The knob slides with a short animation.
-- `InputField` (`lib/core/widgets/inputs/input_field.dart`): The Figma text field: optional caption label, a 52 high box (radius 14) with a 1.5 default border that becomes a 2 `borderStrong` border on focus, or `error` with `errorText` shown below. `obscureText: true` adds the Show / Hide toggle. Takes `controller`, `hintText`, `keyboardType`, `textInputAction`, `inputFormatters`, `autofillHints`, `enabled`, `onChanged` and `onSubmitted`.
-- `RulerPicker` (`lib/core/widgets/inputs/ruler_picker.dart`): The Figma ruler with the big value and unit above it. Takes `value`, `onChanged(double)`, `min`, `max`, `unit`, and optional `step` (default 1) and `majorEvery` (default 5). Scrolling snaps to ticks with a haptic tick. Used for height (cm) and weight (kg) in onboarding.
-- `Button` (`lib/core/widgets/buttons/button.dart`): The Figma button, a pill 56 high (36 when `fullWidth: false`). `ButtonVariant.filled` is Ember with near-black text (Primary), `outlined` is the background colour with a 1.5 border in the text colour (Secondary), `text` has no fill. `isLoading` swaps the label for a spinner and ignores taps; `enabled: false` greys it out. `backgroundColor` and `foregroundColor` override the colours, e.g. for the light pill on a dark card.
-- `Loader` (`lib/core/widgets/feedback/loader.dart`): Full-screen loader. `Loader.show()` covers the app with the logo while the kettlebell circles the ring, `Loader.hide()` removes it. No `BuildContext` needed, so services and view models can call it. Calls are counted: each `Loader.show()` needs its own `Loader.hide()`, and the loader goes away when the count reaches zero. `LoaderHost` (in `loader_host.dart`) draws it; `App` wraps the router in it through the `MaterialApp.router` builder.
-- `AppRichText` (`lib/core/widgets/text/app_rich_text.dart`): Renders a list of `AppTextSpan`s in one paragraph, with the same arguments as `AppText` (`style`, `color`, `textAlign`, `maxLines`, `overflow`) and the same defaults. Each `AppTextSpan` takes its text plus an optional `style` (merged over the parent style), `color` and `onTap` (tap recognizers are created and disposed by the widget).
-- `SvgIcon` (`lib/core/widgets/icons/svg_icon.dart`): Renders an SVG asset with `flutter_svg`, e.g. `SvgIcon(AppSvgs.arrowBack, size: 24)`. Tinted with `context.colors.text` by default (override with `color`, or pass `keepOriginalColors: true` to render the SVG's own colors, e.g. for logos); `size` is a design value scaled by width so the icon stays square.
-- `AppTheme` (`lib/core/theme/app_theme.dart`): Builds `ThemeData` for `light` and `dark` modes, configuring Material 3, `scaffoldBackgroundColor`, `colorScheme`, and theme extensions.
-- `ThemeCubit` (`lib/core/theme/theme_cubit.dart`): `Cubit<ThemeMode>` managing the active theme mode (`ThemeMode.system`, `ThemeMode.light`, `ThemeMode.dark`). Loads the saved mode on startup, persists updates to `LocalStorage` under `LocalStorageKey.themeMode`, and exposes `setTheme(mode)`.
-- Registered in `AppProvider` (`lib/provider.dart`) and wired to `MaterialApp.router` in `lib/main.dart` with `themeMode: context.watch<ThemeCubit>().state` so the app dynamically updates on theme changes.
-- Access colors in widgets via `context.colors` (e.g. `context.colors.primary`) or `AppColors.of(context)`. Change theme via `context.read<ThemeCubit>().setTheme(mode)`.
+To add a route, add it to `AppRoute` (relative path if nested) and register it in the matching router file under its parent's `routes`.
 
 ### Session and storage
 
-Two stores in `lib/core/storage/`, both with typed key enums:
-
-| | `SecureStorage` | `LocalStorage` |
-|---|---|---|
-| Backed by | [`flutter_secure_storage`](https://pub.dev/packages/flutter_secure_storage) (Keychain / Keystore) | [`shared_preferences`](https://pub.dev/packages/shared_preferences) (`SharedPreferencesWithCache`) |
-| For | Secrets and personal data | Non-sensitive settings and flags |
-| Keys | `SecureStorageKey`: `accessToken`, `refreshToken`, `cachedUser`, `supabaseSession` | `LocalStorageKey`: `themeMode`, `activeWorkout`, `pendingWorkouts` |
-| Reads | async | sync (cache loaded at startup) |
-| Available via | `SecureStorage()` (singleton) | `context.read<LocalStorage>()` (created in `main()`, provided by `AppProvider`) |
-
-New keys must be added to the enum (`LocalStorage` only loads keys on its allow-list). Secure values that can't be decrypted are deleted and read as `null`.
-
-- `SecureStorage` is a singleton: `SecureStorage()` always returns the same instance, so classes use it directly instead of having it passed in. It keeps an in-memory cache: each key is read from the device once, then served from memory, so attaching the token to every request costs a map lookup. Writes and deletes update the cache, so it can't go stale (unless another isolate writes to secure storage directly). In tests that swap the mocked storage between cases, call `SecureStorage().resetCache()`. Tokens are read and written by `AuthInterceptor` (attach, refresh).
-- `SessionCubit` (`core/shared_features/session`) holds the `User`: the account (id, email, name) plus its `Profile` once onboarding is done. `start(user)` caches the user, `updateUser(user)` replaces it (ignored when signed out or for another id), `clear()` deletes only `cachedUser`. Features read the profile from `session.user.profile` instead of importing `ProfileService`; `ProfileService` writes changes back with `updateUser`. `AuthService` loads the profile on sign-in and on restore, so the router can send a user without a profile to onboarding.
-- On launch, `AuthService.restoreSession()` starts the session from the one `supabase_flutter` restored from the device (`SecureSessionStorage`, in the Keychain / Keystore): a session means signed in, none means signed out. The SDK refreshes the tokens itself. If it can't (the refresh token was revoked), it signs out and the `AuthService` listener clears the session.
-- **Fresh install** (iOS, native): Keychain items survive uninstall but `UserDefaults` don't, so `AppDelegate.clearKeychainOnFreshInstall()` (`ios/Runner/AppDelegate.swift`) checks a `hasLaunchedBefore` flag in `UserDefaults` at launch, before Flutter starts, and wipes the app's Keychain items if it's missing. A reinstall therefore starts signed out. Android needs nothing: uninstalling removes the app's data and Keystore keys, and backups are off. (Adding this to an app that is already released signs existing iOS users out once on update, since they don't have the flag yet.)
-- iOS: Keychain items use `KeychainAccessibility.first_unlock`, so they stay readable for background work after the first unlock.
-- Android: `android:allowBackup="false"` in `AndroidManifest.xml`. Auto Backup would restore encrypted values onto a device without the key, which can't decrypt them.
-
-### Networking
-
-[Dio](https://pub.dev/packages/dio) behind the `ApiClient` interface (`lib/core/network/api_client.dart`), implemented by `DioApiClient`. Repositories depend on `ApiClient`, so tests can hand them a fake. `DioApiClient` reads `EnvConfig.baseUrl` and enables logging outside prod by itself. `main()` creates the single instance and passes it to `AppProvider`, which hands it to repositories through their constructors (e.g. `AuthRepository(apiClient)`); it is not in the widget tree. Keep it to one instance: concurrent 401s share a refresh only within the same client.
-
-> Zero Gear's backend is Supabase and uses `supabase_flutter` (see [Backend (Supabase)](#backend-supabase)), not `ApiClient`. `ApiClient`, the interceptors and `Endpoints` are the template's HTTP layer for any other API; the app doesn't use them today and they can be removed.
-
-The network layer doesn't know about the session: `DioApiClient` only takes an `onSessionExpired` callback, which `main()` wires to `session.clear`.
-
-**The client returns `Result<T>`; repositories map it.** Every `ApiClient` call returns `Ok(body)` or `Error(AppException)`, already mapped with the HTTP `statusCode` and the server's message. No Dio types reach repositories. `T` is the raw JSON shape: `Map<String, Object?>` for an object, `List<Object?>` for an array (map the items yourself), `void` when the body doesn't matter. A body that isn't a `T` (e.g. empty where an object was expected) becomes a `ParseException`. A repository usually just parses the body with `map`, and handles an endpoint-specific error by matching on it before falling back to the default:
-
-```dart
-// Default handling: one line.
-Future<Result<User>> fetchCurrentUser() async {
-  final result = await _api.get<Map<String, Object?>>(Endpoints.me);
-  return result.map(User.fromJson);
-}
-
-// Endpoint-specific handling: match the error first.
-Future<Result<SignInResult>> signIn({required String email, required String password}) async {
-  final result = await _api.post<Map<String, Object?>>(
-    Endpoints.login,
-    data: {'email': email, 'password': password},
-  );
-  return switch (result) {
-    Error(error: AppException(statusCode: 401)) =>
-      const Result.error(AppException('Invalid email or password.', statusCode: 401)),
-    _ => result.map(SignInResult.fromJson),
-  };
-}
-```
-
-- `result.map(transform)` converts the value; if `transform` throws (the body doesn't match the model) the result is a `ParseException`, so a bad response never crashes. In debug builds the original error and stack trace are printed, so you can see which field didn't match.
-- `result.fold(onError, onOk)` is there when you want `Either`-style branching.
-
-Services and view models never see Dio; they switch on the `Result`:
-
-```dart
-// Service / view model: switch on it.
-switch (await _authService.signIn(email: email, password: password)) {
-  case Ok(:final value): ...
-  case Error(:final error): ...   // error.message, error.statusCode
-}
-```
-
-- `Result.error` always carries an `AppException` (`lib/core/utils/app_exception.dart`): a `message` safe to show the user and a `statusCode` (the HTTP status when there was a response, otherwise `null`). View models can show `error.message` directly.
-- `ApiClient`: `get/post/put/patch/delete<T>` (with `query`, `data`), `upload<T>(FormData)` (Dio sets the multipart boundary; optional `onSendProgress` and `method`), `download(path, savePath)`.
-- The default mapping (`e.toAppException()` in `lib/core/network/dio_exception_mapper.dart`, applied by the client) produces the network subclasses (`lib/core/network/network_exception.dart`):
-  - `NetworkException`: offline, DNS, timeouts.
-  - `UnauthorizedException`: 401 on a request that carried a token, after a failed refresh (`statusCode` 401).
-  - `ServerException`: any other non-2xx; `message` comes from the body's `message` field.
-  - `UnknownException`: anything else.
-- `ParseException` (`lib/core/utils/app_exception.dart`): produced by `result.map` when parsing throws.
-- For non-network failures (validation, storage, …), return `AppException('message')` or a subclass of it.
-- Note: `Error` here is the `Result` subclass and shadows `dart:core`'s `Error` in files that import `result.dart`.
-- `AsyncValue<T>` (`lib/core/utils/async_value.dart`) is available for UI state that is simply loading / data / error: convert a `Result` with `AsyncValue.data(value)` / `AsyncValue.error(error.message)` and render with `state.when(...)`.
-
-**Auth.** No per-call flag: the token is attached whenever one is stored, and only to our own API.
-
-- `AuthInterceptor` adds `Authorization: Bearer <accessToken>` from `SecureStorage` when a token exists **and** the request goes to `BASE_URL`'s scheme, host and port. Full URLs to other hosts (presigned S3 uploads/downloads, CDNs, third-party APIs) never get the token. Signed out, there is no token, so login/sign-up/password-reset calls go out without one.
-- On a 401 it refreshes once (`POST /auth/refresh` with the refresh token), saves the new tokens and retries the request. Concurrent 401s share a single refresh.
-- Refresh rejected (400/401/403) → `onSessionExpired` (clears the session → router goes to login); the request returns `UnauthorizedException`. Refresh failed for other reasons (offline, 5xx) → session kept, request fails.
-- Retried uploads re-send a clone of the `FormData` (a sent `FormData` can't be reused).
-- Only a request that carried a token triggers a refresh. A 401 without one (e.g. wrong password on login) is a `ServerException` with `statusCode` 401, not a sign-out.
-
-**Logging.** `LoggingInterceptor` passes every request, response and error to `AppLogger` (`lib/core/utils/app_logger.dart`), which prints boxed blocks (method, URL, query, headers, body / status, data / error type) with `debugPrint`. The interceptor is always installed; the gate is in `AppLogger`, which only prints in debug builds (`kDebugMode`), for every flavor. Bodies are never truncated: long lines are split into 800-character chunks so Android's logcat doesn't cut them off. `Authorization`, `Cookie` and `Set-Cookie` show as `***HIDDEN***`; comment them out of `_sensitiveHeaders` locally if you need to see them. 
-
-**App logs.** Use `AppLogger.log('...')` for any other logging instead of `print`/`debugPrint`: same boxed format, debug builds only, long lines chunked.
-
-**Adapting to your backend** (marked with `TODO`):
-
-- API hosts: `BASE_URL` in `env/.env.<flavor>`.
-- Endpoint paths: `lib/core/constants/endpoints.dart` (`Endpoints`). Add new paths there rather than inline in repositories.
-- Asset paths: `lib/core/constants/app_svgs.dart` (`AppSvgs`) and `lib/core/constants/app_images.dart` (`AppImages`). Put files in `assets/svgs/` and `assets/images/` (already registered in `pubspec.yaml`) and add a constant for each, e.g. `static const arrowBack = 'assets/svgs/arrow_back.svg';`, rather than using path strings inline.
-- Refresh request/response body: `AuthInterceptor._refresh()` and `AuthTokens.fromJson`.
-- Error message field: `serverMessage` in `dio_exception_mapper.dart`.
-- Auth payloads and error statuses: `AuthRepository` (`lib/features/auth/data/repositories/auth_repository.dart`).
+- `SessionCubit` holds the `User` (id, email, display name from Google) and their `Profile` once onboarded. `session.user.isOnboarded` is true when a profile exists. `start(user)` caches the user, `updateUser(user)` replaces it (ignored when signed out or for another id), and `clear()` deletes the cache. Features read the profile from `session.user.profile`; `ProfileService` writes changes back with `updateUser`.
+- `SecureStorage` (Keychain / Keystore) holds secrets and the cached user. `LocalStorage` (`shared_preferences`) holds non-sensitive values (theme mode, the workout in progress, workouts waiting to upload). Both use typed key enums, and new keys must be added to the enum. `SecureSessionStorage` keeps the Supabase session in the Keychain / Keystore.
+- **Fresh install (iOS)**: Keychain items survive uninstall, so `AppDelegate.clearKeychainOnFreshInstall()` wipes them on the first launch after a reinstall. Android needs nothing: backups are off (`allowBackup="false"`).
 
 ### Backend (Supabase)
 
-The backend is a Supabase project (free tier), used through [`supabase_flutter`](https://pub.dev/packages/supabase_flutter): `Supabase.initialize` in `main()` with `BASE_URL` and `PUBLISHABLE_KEY`, and a `NetworkClient` around the Supabase client passed to the repositories by `AppProvider`. The SDK stores the session (in `SecureSessionStorage`) and refreshes tokens. Row-level security keeps every user to their own rows, so queries carry no user filter. The schema and plan content live in the database; see the project docs `backend-decisions.md` and `backend-schema.sql`.
+The backend is a Supabase project, used through [`supabase_flutter`](https://pub.dev/packages/supabase_flutter). The SDK stores the session and refreshes tokens. Row-level security limits every user to their own rows, so queries carry no user filter. Table and function names are in `lib/core/constants/supabase_names.dart`.
 
-Repositories never touch the Supabase client directly: they call `NetworkClient.request((db) => db.from(...))` (`lib/core/network/network_client.dart`), which returns a `Result` and maps the SDK's exceptions to `NetworkException`, `UnauthorizedException` or `ServerException`. Table and function names are in `lib/core/constants/supabase_names.dart`.
+`NetworkClient.request((db) => db.from(...))` runs a call and returns a `Result`, mapping SDK errors to `NetworkException`, `UnauthorizedException` or `ServerException`. Every `Result.error` carries an `AppException` whose `message` is safe to show. Handle results with a switch:
 
-| Where | Repositories | Service (a Cubit) | Owns |
-|---|---|---|---|
-| `features/auth` | `AuthRepository`, `GoogleSignInRepository` | `AuthService` (`AuthActivity`) | Google sign-in, session restore, sign out, account deletion |
-| `core/shared_features/session` | none | `SessionCubit` (`SessionState`) | The signed-in `User` and their `Profile` |
-| `features/profile` | `ProfileRepository` | `ProfileService` (`ProfileState`) | Onboarding, height and weight, weight history, feature toggles |
-| `features/home` | `PlanRepository`, `WorkoutRepository`, `WorkoutLocalRepository` | `PlanService` (`PlanState`), `WorkoutService` (`WorkoutState`), `HomeService` (`HomeState`) | The plan and exercise library, the workout in progress, saved workouts, Home summary (up next, stats, ratings, calendar) and the plan list |
+```dart
+switch (await profileService.completeOnboarding(...)) {
+  case Ok(:final value): ...
+  case Error(:final error): ...
+}
+```
 
-- **Sign-in is Google only.** `GoogleSignInRepository` returns Google's ID and access tokens, which `AuthRepository` passes to `auth.signInWithIdToken`. In Supabase, enable the Google provider with the web, iOS and Android client IDs under Authorized Client IDs, and turn on "Skip nonce checks" (the sign-in sends no nonce). `AuthService.deleteAccount()` asks for Google again, checks it is the same account, then calls the `delete_my_account` function.
-- **Onboarding.** `ProfileService.completeOnboarding` saves the profile and the first weight entry. `session.user.isOnboarded` is false until then. Gender cannot change afterwards (a database trigger).
-- **The plan.** `PlanService.planDay(n)` calls `my_plan_day`, which picks the track from the user's gender and handles all days (days 1 to 48 without equipment, 49 to 96 with a band, then a monthly progression). `summaryFor(n)` and `summaries()` give day names without exercises. Exercises can have no `gifUrl` yet (some band exercises).
-- **Which day is "Up next".** No day number is stored on a workout. `WorkoutHistory` replays the saved workouts by date: a completed workout moves to the next day, an incomplete one repeats its day. Up next is the number of completed workouts plus one.
-- **A workout.**
-  1. `begin(day)` when the first exercise starts (the warm-up is not counted), then `setSetsDone` and `goToExercise` as the user goes. Every change is saved on the device (`activeWorkout`).
-  2. `finish()` or `giveUp()` upload the workout and its exercises. Saving is an upsert, since there is one workout per user per date.
-  3. If the upload fails for a network or server reason, the workout is queued on the device (`pendingWorkouts`) and uploaded on the next `history()` or `syncPending()`. The call still succeeds with `FinishedWorkout.synced == false`.
-  4. After the app is killed, `restoreActiveWorkout()` returns the workout if the last ticked set was under 2 hours ago. Otherwise it is saved as incomplete, ending at the last tick. With no ticked set it is discarded.
-  5. `resumeIncomplete()` picks today's incomplete workout back up (the "Complete workout" button).
-- **Home.** `HomeService.load()` builds everything Home shows. Ratings count completed workouts only: this week is rated from Monday, all time is the average per week once a full week has passed. Great is 5 or more a week, Good is 3 or 4, Needs work is fewer.
-- **Sign out.** `AppProvider` resets the services when the session ends.
+`Error` here is the `Result` subclass and shadows `dart:core`'s `Error` in files that import `result.dart`.
+
+**Supabase setup**
+
+- Run `backend-schema.sql`, then the plan and exercise seed scripts from the project docs.
+- Enable the Google provider with the web, iOS and Android client IDs under Authorized Client IDs, and turn on "Skip nonce checks" (the app sends no nonce). Turn the email provider off.
+- `.github/workflows/supabase-keep-alive.yml` pings the project twice a week so the free tier does not pause it.
+
+**Behaviour worth knowing**
+
+- **Sign-in** is Google only. `GoogleSignInRepository` returns the ID and access tokens, which `AuthRepository` passes to `auth.signInWithIdToken`. Deleting an account asks for Google again, checks it is the same account, then calls `delete_my_account`.
+- **The name** comes from Google and is read from the auth metadata at sign-in (`User.displayName`). The profile does not store it, and onboarding does not ask for it.
+- **Onboarding**: `ProfileService.completeOnboarding` saves gender, height and weight and the first weight entry. Gender cannot change afterwards (a database trigger).
+- **The plan**: `PlanService.planDay(n)` calls `my_plan_day`, which picks the track from the user's gender (days 1 to 48 without equipment, 49 to 96 with a band, then a monthly progression). `summaries()` returns day names without exercises. Some exercises have no `gifUrl` yet.
+- **Up next**: no day number is stored on a workout. `WorkoutHistory` replays saved workouts by date: a completed workout moves to the next day, an incomplete one repeats its day.
+- **A workout**: `begin(day)` when the first exercise starts, then `setSetsDone` and `goToExercise`, saved on the device after every change. `finish()` or `giveUp()` upload it (an upsert, one workout per user per date). If the upload fails for a network or server reason it is queued on the device and uploaded on the next `history()` or `syncPending()`. After a kill, `restoreActiveWorkout()` returns it if the last tick was under 2 hours ago; otherwise it is saved as incomplete, ending at the last tick (or discarded with no ticks).
+- **Home**: `HomeService.load()` builds everything Home shows. Ratings count completed workouts only. Great is 5 or more a week, Good is 3 or 4, Needs work is fewer.
+
+### Design system
+
+Tokens and widgets are built from the Figma file and named after it.
+
+- **Colours** (`AppColors`, `context.colors`): named after the Figma `Color` variables: `bgPrimary`, `bgSecondary`, `bgTertiary`, `bgInverse`, `textPrimary`, `textSecondary`, `textInverse`, `borderDefault`, `borderStrong`, `accentPrimary` (Ember), `accentOn`, `successPrimary`, `successOn`. `error` and `onError` are not in Figma yet. Accent, success and error are the same in both modes. `ThemeCubit` keeps and persists the mode (system, light, dark).
+- **Text** (`AppTextStyles`, Inter via `google_fonts`): `display` 30, `title` 22, `heading` 16, `body` 14, `bodyMedium`, `caption` 12, `label` 11 (uppercase labels), `numeric` 64. `AppText` applies a style and a theme colour.
+- **Spacing** (`AppSpacing`): scaled gaps (`v8`, `h16`) and padding presets.
+- **Scaling** (`ScaleUtil`): sizes are design values for a 375 x 812 frame, scaled with `16.w`, `16.h`, `14.sp` and `8.r`, capped at 1.2 so tablets don't render everything twice as large. `ContentWidth` centres a screen body and caps its width on tablets (`AppLayout`).
+- **Icons**: `SvgIcon(AppSvgs.check, size: 24)`, tinted with the text colour by default (`keepOriginalColors: true` keeps the SVG's own colours). Add an SVG to `assets/svgs/` and a constant to `AppSvgs`; don't use path strings inline.
+
+Reusable widgets (`lib/core/widgets/`):
+
+| Widget | What it is |
+|---|---|
+| `Button` | Pill, 56 high (36 when `fullWidth: false`). `ButtonVariant.filled` (Ember), `outlined`, `text`. `isLoading` shows a spinner and ignores taps. |
+| `InputField` | Labelled text field, 52 high. Border turns `borderStrong` on focus and `error` with `errorText`. `obscureText` adds Show / Hide. |
+| `RulerPicker` | Big value plus a scrolling ruler. `value`, `onChanged(double)`, `min`, `max`, `unit`, optional `step`. Used for height and weight in onboarding. |
+| `AppSwitch` | The toggle. `value` and an optional `onPress`. |
+| `AppCheckbox` | The selection circle (Appearance). `value` and an optional `onPress`. |
+| `Loader` | `Loader.show()` and `Loader.hide()` cover the app with the logo and an orbiting kettlebell. No `BuildContext` needed. Calls are counted, so each `show()` needs a `hide()`. |
+| `AppToast` | `AppToast.success` and `AppToast.error` overlays. |
+| `ErrorView` | Centred error state: `title`, `text`, `onRetry`. |
+| `AppScreen`, `AppHeader`, `AppCard`, `AppStepper` | Screen scaffold with header and footer, title block, card, step progress bar. |
+| `ConfirmationModal` | Confirm dialog. |
+| `AppRichText` | A paragraph of `AppTextSpan`s with optional tap handlers. |
+
+### Pagination
+
+`PaginatedViewModel<T>` (`lib/core/pagination/`) and `PaginatedListView` give infinite scroll: repositories return a `Result<PaginatedData<T>>`, the view model implements `fetchPage(int page)`, and the view renders `PaginatedListView` with `onLoadMore` and optional `onRefresh`. Nothing in the app uses them yet. Don't put the list inside a `SingleChildScrollView` or a `shrinkWrap` list, which would build every item and load every page at once.
 
 ### Naming
 
-Folders stay flat; the file name prefix shows ownership:
+Folders stay flat; the file name shows ownership:
 
-- `<screen>_view.dart`, `<screen>_view_model.dart`, `<screen>_ui_state.dart` — one screen.
-- Multi-step flows (e.g. sign-up) share **one** view model and UI state across their views: `signup_view_model.dart`, `signup_ui_state.dart`, `signup_account_view.dart`, `signup_verify_view.dart`, …
-- `<screen>_*.dart` widgets belong to one screen; `<feature>_*.dart` widgets are shared across the feature.
+- `<screen>_view.dart`, `<screen>_view_model.dart` and `<screen>_ui_state.dart` belong to one screen. Screens with their own widgets or view models live in a folder named after the screen (`views/weight_chart/`).
+- Flows with several views (onboarding) share one view model and UI state.
+- `ui/widgets/<screen>/` holds widgets used by one screen; widgets shared across the feature sit in `ui/widgets/`.
 
-If a feature's `views/` gets crowded (15+ files), group by flow: `ui/views/signup/`.
+### Tooling
 
-### Adding a feature
-
-```sh
-dart run tool/new_feature.dart user_profile                         # new feature, screen = user_profile
-dart run tool/new_feature.dart user_profile --screen edit_profile   # add a screen to it
-```
-
-Creates (never overwrites existing files):
-
-```
-lib/features/user_profile/
-  data/repositories/user_profile_repository.dart
-  data/services/user_profile_service.dart
-  ui/models/edit_profile_ui_state.dart
-  ui/views/edit_profile_view.dart
-  ui/views/edit_profile_view_model.dart
-```
-
-The generated repository takes the `ApiClient`. For a new feature the script prints the line to register its service in `lib/provider.dart` (`XService(XRepository(apiClient))`). Add `data/models/` and `ui/widgets/` when the feature needs them, and put its tests under `test/features/<feature>/`, mirroring `lib/`.
-
-In VS Code: **Tasks: Run Task → New feature / screen**.
+- `dart run tool/rename.dart --name "..." --id com.zero.gear --package zero_gear` renames the app, bundle ID and Dart package (also under **Tasks: Run Task → Rename app**).
+- `tool/new_feature.dart` scaffolds a feature or screen. It still generates repositories that take the old `ApiClient`, which no longer exists, so change them to `NetworkClient` by hand until the script is updated.

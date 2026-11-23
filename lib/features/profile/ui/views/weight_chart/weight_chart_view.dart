@@ -1,15 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:zero_gear/core/theme/app_colors.dart';
-import 'package:zero_gear/core/theme/app_text_styles.dart';
 import 'package:zero_gear/core/utils/async_value.dart';
-import 'package:zero_gear/core/utils/formatters.dart';
 import 'package:zero_gear/core/utils/scale_util.dart';
-import 'package:zero_gear/core/widgets/containers/app_card.dart';
 import 'package:zero_gear/core/widgets/containers/app_header.dart';
 import 'package:zero_gear/core/widgets/containers/app_screen.dart';
 import 'package:zero_gear/core/widgets/feedback/error_view.dart';
-import 'package:zero_gear/core/widgets/text/app_text.dart';
 import 'package:zero_gear/features/profile/data/models/weight_summary.dart';
 import 'package:zero_gear/features/profile/ui/widgets/profile/weight_change_summary.dart';
 import 'package:zero_gear/features/profile/ui/widgets/profile/weight_chart.dart';

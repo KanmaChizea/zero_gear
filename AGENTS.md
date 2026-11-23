@@ -53,16 +53,6 @@ Do **not** add unit, widget, integration, or other automated tests unless explic
 
 The purpose of this project is to demonstrate and establish project structure and architecture. Spending time writing tests for template/example implementations is unnecessary unless the test itself is specifically being used to demonstrate an architectural pattern.
 
-## Documentation
-
-**Always update the README when making changes that affect the project structure, architecture, setup, conventions, or usage.**
-
-The README should remain an accurate representation of how the template is intended to be used.
-
-When introducing a new architectural pattern, dependency, convention, or significant structural change, update the relevant README section as part of the same change.
-
-Do not leave documentation updates as a separate follow-up task.
-
 ## Comments
 
 Keep comments to a minimum.
