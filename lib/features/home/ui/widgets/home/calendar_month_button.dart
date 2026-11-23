@@ -3,7 +3,11 @@ import 'package:zero_gear/core/utils/scale_util.dart';
 import 'package:zero_gear/core/widgets/icons/svg_icon.dart';
 
 class CalendarMonthButton extends StatelessWidget {
-  const CalendarMonthButton({required this.asset, required this.onTap});
+  const CalendarMonthButton({
+    super.key,
+    required this.asset,
+    required this.onTap,
+  });
 
   final String asset;
   final VoidCallback? onTap;

@@ -6,6 +6,7 @@ import 'package:zero_gear/features/home/data/models/workout_status.dart';
 
 class CalendarDayCell extends StatelessWidget {
   const CalendarDayCell({
+    super.key,
     required this.day,
     required this.status,
     required this.isToday,

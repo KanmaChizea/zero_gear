@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:zero_gear/core/constants/app_svgs.dart';
 import 'package:zero_gear/core/router/app_route.dart';
 import 'package:zero_gear/core/theme/theme.dart';
@@ -85,16 +84,16 @@ class _HomeBody extends StatelessWidget {
                       data: data,
                       isStarting: state.isStarting,
                       isGivingUp: state.isGivingUp,
-                      onStart: () async {
-                        final started = await viewModel.start();
-                        if (!started || !context.mounted) return;
-                        final route = data.profile.preWorkoutStretch
-                            ? AppRoute.stretchOffer
-                            : AppRoute.activeWorkout;
-                        context.pushNamed(route.name);
-                      },
-                      onResume: () =>
-                          context.pushNamed(AppRoute.activeWorkout.name),
+                      onStart: () => context.pushNamed(
+                        AppRoute.dayDetail.name,
+                        pathParameters: {'day': '${data.nextDay.overallDay}'},
+                      ),
+                      onResume: () => context.pushNamed(
+                        AppRoute.dayDetail.name,
+                        pathParameters: {
+                          'day': '${data.activeWorkout!.day.overallDay}',
+                        },
+                      ),
                       onGiveUp: viewModel.giveUp,
                     ),
                     ProgressSummary(summary: data),

@@ -7,12 +7,8 @@ import '../../data/services/workout_service.dart';
 import '../models/home_ui_state.dart';
 
 class HomeViewModel extends Cubit<HomeUiState> {
-  HomeViewModel({
-    required HomeService homeService,
-    required WorkoutService workoutService,
-  }) : _homeService = homeService,
-       _workoutService = workoutService,
-       super(HomeUiState(summary: AsyncValue.loading())) {
+  HomeViewModel({required this._homeService, required this._workoutService})
+    : super(HomeUiState(summary: AsyncValue.loading())) {
     initialize();
   }
 

@@ -6,11 +6,8 @@ import '../../../data/services/workout_service.dart';
 import '../../models/workout_record_ui_state.dart';
 
 class WorkoutRecordViewModel extends Cubit<WorkoutRecordUiState> {
-  WorkoutRecordViewModel({
-    required WorkoutService workoutService,
-    required this.date,
-  }) : _workoutService = workoutService,
-       super(WorkoutRecordUiState.initial()) {
+  WorkoutRecordViewModel({required this._workoutService, required this.date})
+    : super(WorkoutRecordUiState.initial()) {
     initialize();
   }
 

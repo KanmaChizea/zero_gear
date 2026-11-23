@@ -5,9 +5,8 @@ import 'package:zero_gear/features/home/data/models/plan_day.dart';
 import 'package:zero_gear/features/home/data/services/plan_service.dart';
 
 class DayDetailViewModel extends Cubit<AsyncValue<PlanDay>> {
-  DayDetailViewModel({required PlanService planService, required this.day})
-    : _planService = planService,
-      super(AsyncValue.loading()) {
+  DayDetailViewModel({required this._planService, required this.day})
+    : super(AsyncValue.loading()) {
     initialize();
   }
 

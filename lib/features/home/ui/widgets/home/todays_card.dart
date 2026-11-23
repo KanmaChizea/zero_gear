@@ -5,7 +5,6 @@ import 'package:zero_gear/core/utils/scale_util.dart';
 import 'package:zero_gear/core/widgets/buttons/button.dart';
 import 'package:zero_gear/core/widgets/text/app_text.dart';
 import 'package:zero_gear/features/home/data/models/home_summary.dart';
-import 'package:zero_gear/features/home/data/models/workout_status.dart';
 
 class TodaysCard extends StatelessWidget {
   const TodaysCard({

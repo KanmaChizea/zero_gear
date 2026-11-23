@@ -69,7 +69,7 @@ class _WorkoutRecordBody extends StatelessWidget {
               title: 'No workout',
               text: 'Nothing was recorded on this day.',
             ),
-            children: [],
+            children: const [],
           );
         }
 

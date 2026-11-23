@@ -4,7 +4,11 @@ import 'package:zero_gear/core/utils/scale_util.dart';
 import 'package:zero_gear/core/widgets/text/app_text.dart';
 
 class CalendarLegendItem extends StatelessWidget {
-  const CalendarLegendItem({required this.label, required this.filled});
+  const CalendarLegendItem({
+    super.key,
+    required this.label,
+    required this.filled,
+  });
 
   final String label;
   final bool filled;
@@ -26,7 +30,11 @@ class CalendarLegendItem extends StatelessWidget {
                 : Border.all(color: colors.accentPrimary, width: 2),
           ),
         ),
-        AppText(label, style: AppTextStyles.caption, color: colors.textSecondary),
+        AppText(
+          label,
+          style: AppTextStyles.caption,
+          color: colors.textSecondary,
+        ),
       ],
     );
   }

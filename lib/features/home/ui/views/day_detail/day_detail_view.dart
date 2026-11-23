@@ -15,8 +15,10 @@ class DayDetailView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) =>
-          DayDetailViewModel(planService: context.read<PlanService>(), day: day),
+      create: (context) => DayDetailViewModel(
+        planService: context.read<PlanService>(),
+        day: day,
+      ),
       child: const _DayDetailBody(),
     );
   }
@@ -42,7 +44,7 @@ class _DayDetailBody extends StatelessWidget {
                       'about ${plan.estimatedMinutes} min · '
                       'Targets ${plan.focusMuscles.join(', ')}',
                 ),
-          children: [],
+          children: const [],
         );
       },
     );
