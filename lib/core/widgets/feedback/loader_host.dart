@@ -6,16 +6,33 @@ import 'package:zero_gear/core/utils/scale_util.dart';
 
 import 'loader.dart';
 
-class LoaderHost extends StatelessWidget {
+class LoaderHost extends StatefulWidget {
   const LoaderHost({super.key, required this.child});
 
   final Widget child;
 
   @override
+  State<LoaderHost> createState() => _LoaderHostState();
+}
+
+class _LoaderHostState extends State<LoaderHost> {
+  @override
+  void initState() {
+    super.initState();
+    for (final asset in [AppSvgs.logoRing, AppSvgs.kettlebell]) {
+      final loader = SvgAssetLoader(asset);
+      svg.cache.putIfAbsent(
+        loader.cacheKey(null),
+        () => loader.loadBytes(null),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        child,
+        widget.child,
         Positioned.fill(
           child: ValueListenableBuilder<int>(
             valueListenable: Loader.count,

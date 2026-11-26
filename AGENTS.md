@@ -55,7 +55,7 @@ The purpose of this project is to demonstrate and establish project structure an
 
 ## Comments
 
-Keep comments to a minimum.
+Keep comments to a minimum. Do not add comments by default: no doc comments on classes, fields or methods whose names already say what they are, and no comments explaining what a change does or why it was made (put that in your reply, not the code). Write a comment only when the code would be genuinely confusing without it, and keep it to one or two lines.
 
 Prefer clear naming and straightforward code over comments that explain obvious implementation details.
 

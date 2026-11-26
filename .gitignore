@@ -44,9 +44,5 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-.env.prod
-.env.staging
-.env.dev
-.env
-.vercel
 .env*
+.vercel

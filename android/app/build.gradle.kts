@@ -25,28 +25,6 @@ android {
         versionName = flutter.versionName
     }
 
-    buildFeatures {
-        resValues = true
-    }
-
-    flavorDimensions += "environment"
-
-    productFlavors {
-        // Same applicationId across flavors; only the launcher name differs.
-        create("dev") {
-            dimension = "environment"
-            resValue("string", "app_name", "Zero Gear Dev")
-        }
-        create("staging") {
-            dimension = "environment"
-            resValue("string", "app_name", "Zero Gear Staging")
-        }
-        create("prod") {
-            dimension = "environment"
-            resValue("string", "app_name", "Zero Gear")
-        }
-    }
-
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.

@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'
     show FlutterAuthClientOptions, Supabase;
 import 'package:zero_gear/core/config/env_config.dart';
-import 'package:zero_gear/core/config/flavor.dart';
 import 'package:zero_gear/features/auth/data/repositories/auth_repository.dart';
 import 'package:zero_gear/features/auth/data/repositories/google_sign_in_repository.dart';
 import 'package:zero_gear/features/auth/data/services/auth_service.dart';
@@ -22,7 +21,7 @@ import 'package:zero_gear/provider.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   ScaleUtil.init();
-  await EnvConfig.init(Flavor.current);
+  await EnvConfig.init();
   await Supabase.initialize(
     url: EnvConfig.baseUrl,
     publishableKey: EnvConfig.publishableKey,
@@ -52,6 +51,8 @@ Future<void> main() async {
   );
 }
 
+const _appName = 'Zero Gear';
+
 class App extends StatelessWidget {
   const App({super.key, required this.router});
 
@@ -60,8 +61,8 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: Flavor.current.appName,
-      debugShowCheckedModeBanner: !Flavor.current.isProd,
+      title: _appName,
+      debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: context.watch<ThemeCubit>().state,
@@ -71,7 +72,7 @@ class App extends StatelessWidget {
         // The app's primary colour is orange, which Flutter would otherwise
         // use for the browser and installed-app status bar.
         return Title(
-          title: Flavor.current.appName,
+          title: _appName,
           color: Theme.of(context).scaffoldBackgroundColor,
           child: LoaderHost(child: child!),
         );

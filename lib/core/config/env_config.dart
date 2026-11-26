@@ -1,8 +1,6 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-import 'flavor.dart';
-
-/// Per-flavor configuration, loaded from `env/.env.<flavor>`.
+/// App configuration, loaded from `.env`.
 class EnvConfig {
   static const _baseUrlKey = 'BASE_URL';
   static const _publishableKey = 'PUBLISHABLE_KEY';
@@ -12,7 +10,7 @@ class EnvConfig {
   static const _googleIosClientIdKey = 'GOOGLE_IOS_CLIENT_ID';
   static const _googleAndroidClientIdKey = 'GOOGLE_ANDROID_CLIENT_ID';
 
-  static Future<void> init(Flavor flavor) async {
+  static Future<void> init() async {
     await dotenv.load(fileName: '.env');
     for (final key in [
       _baseUrlKey,

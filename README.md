@@ -43,30 +43,18 @@ Product decisions are in the project doc `product-decisions.md`; backend decisio
 
 3. `flutter run`
 
-## Flavors
-
-| Flavor | App name |
-|---|---|
-| `dev` | Zero Gear Dev |
-| `staging` | Zero Gear Staging |
-| `prod` (default) | Zero Gear |
-
-All three share one application and bundle ID (`com.zero.gear`), so only one flavor can be installed on a device at a time. `Flavor.current` (`lib/core/config/flavor.dart`) is resolved from Flutter's `appFlavor`; no `--dart-define` is needed. Flavors only change the app name today: they all read the same `.env`.
-
-- **Android**: `productFlavors` in `android/app/build.gradle.kts`.
-- **iOS**: build configurations `{Debug,Release,Profile}-{dev,staging,prod}` and schemes `dev`, `staging` and `prod`. The app name is the `APP_DISPLAY_NAME` build setting. In Xcode, pick a flavor scheme (there is no `Runner` scheme).
-- **Default**: `default-flavor: prod` in `pubspec.yaml`, so a plain `flutter run` is the prod flavor.
-
 ## Running and building
 
-```sh
-flutter run --flavor dev
-flutter run --flavor staging
-flutter run --flavor prod --release
+There is one environment, configured by `.env`. The app is called Zero Gear on every platform, with the application and bundle ID `com.zero.gear`.
 
-flutter build apk       --flavor <flavor> --release
-flutter build appbundle --flavor <flavor> --release
-flutter build ipa       --flavor <flavor> --release
+```sh
+flutter run
+flutter run --release
+
+flutter build apk       --release
+flutter build appbundle --release
+flutter build ipa       --release
+flutter build web       --release
 ```
 
 In VS Code, pick a configuration under **Run and Debug**, or run a build from **Tasks: Run Task** (`Build: Android APK`, `Build: Android App Bundle`, `Build: iOS IPA`, `Build: All platforms`).
@@ -84,7 +72,7 @@ lib/
   main.dart                       # Supabase init, builds the session and AuthService, restores the session, runs App
   provider.dart                   # AppProvider: app-wide Cubits and services; resets them when the session ends
   core/
-    config/                       # Flavor (enum + Flavor.current), EnvConfig
+    config/                       # EnvConfig
     constants/                    # supabase_names (tables, functions), app_svgs, app_images, app_layout, endpoints
     extensions/                   # string, list and date helpers
     network/

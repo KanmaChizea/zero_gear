@@ -22,6 +22,7 @@ import '../../../data/services/workout_service.dart';
 import '../../models/active_workout_ui_state.dart';
 import '../../widgets/exercise/exercise_gif.dart';
 import '../../widgets/workout/active_workout_header.dart';
+import '../../widgets/workout/hold_timer.dart';
 import '../../widgets/workout/set_chip.dart';
 import '../../widgets/workout/wide_workout_layout.dart';
 import 'active_workout_view_model.dart';
@@ -267,6 +268,8 @@ class _ExerciseBody extends StatelessWidget {
             ),
           ],
         ),
+        if (exercise.holdSeconds case final seconds?)
+          HoldTimer(seconds: seconds),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           spacing: 8.h,

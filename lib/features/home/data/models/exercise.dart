@@ -9,6 +9,7 @@ class Exercise extends Equatable {
     required this.kind,
     required this.equipment,
     required this.primaryMuscle,
+    required this.isHold,
     required this.gifUrl,
     required this.restText,
     required this.tempoText,
@@ -25,6 +26,7 @@ class Exercise extends Equatable {
     kind: ExerciseKind.values.byName(json['kind']! as String),
     equipment: Equipment.values.byName(json['equipment']! as String),
     primaryMuscle: json['primary_muscle']! as String,
+    isHold: json['is_hold'] as bool? ?? false,
     gifUrl: json['gif_url'] as String?,
     restText: json['rest_text'] as String?,
     tempoText: json['tempo_text'] as String?,
@@ -41,6 +43,8 @@ class Exercise extends Equatable {
   final Equipment equipment;
   final String primaryMuscle;
 
+  final bool isHold;
+
   final String? gifUrl;
   final String? restText;
   final String? tempoText;
@@ -56,6 +60,7 @@ class Exercise extends Equatable {
     'kind': kind.name,
     'equipment': equipment.name,
     'primary_muscle': primaryMuscle,
+    'is_hold': isHold,
     'gif_url': gifUrl,
     'rest_text': restText,
     'tempo_text': tempoText,
@@ -73,6 +78,7 @@ class Exercise extends Equatable {
     kind,
     equipment,
     primaryMuscle,
+    isHold,
     gifUrl,
     restText,
     tempoText,

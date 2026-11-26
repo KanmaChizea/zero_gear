@@ -21,6 +21,7 @@ import '../../models/active_stretch_ui_state.dart';
 import '../../widgets/exercise/exercise_gif.dart';
 import '../../../data/models/finished_workout.dart';
 import '../../widgets/workout/active_workout_header.dart';
+import '../../widgets/workout/hold_timer.dart';
 import '../../widgets/workout/wide_workout_layout.dart';
 import 'active_stretch_view_model.dart';
 
@@ -232,6 +233,8 @@ class _StretchBody extends StatelessWidget {
             ),
           ],
         ),
+        if (stretch.holdSeconds case final seconds?)
+          HoldTimer(seconds: seconds),
         if (exercise.howTo.isNotEmpty)
           AppCard(
             padding: AppSpacing.symmetricPadding(horizontal: 16, vertical: 12),

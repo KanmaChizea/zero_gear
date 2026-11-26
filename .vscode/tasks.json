@@ -3,43 +3,43 @@
   "tasks": [
     {
       "label": "Build: Android APK",
-      "detail": "flutter build apk --flavor <flavor> --<mode>",
+      "detail": "flutter build apk --<mode>",
       "type": "shell",
       "command": "flutter",
-      "args": ["build", "apk", "--flavor", "${input:flavor}", "--${input:mode}"],
+      "args": ["build", "apk", "--${input:mode}"],
       "group": "build",
       "problemMatcher": []
     },
     {
       "label": "Build: Android App Bundle",
-      "detail": "flutter build appbundle --flavor <flavor> --<mode>",
+      "detail": "flutter build appbundle --<mode>",
       "type": "shell",
       "command": "flutter",
-      "args": ["build", "appbundle", "--flavor", "${input:flavor}", "--${input:mode}"],
+      "args": ["build", "appbundle", "--${input:mode}"],
       "group": "build",
       "problemMatcher": []
     },
     {
       "label": "Build: iOS IPA",
-      "detail": "flutter build ipa --flavor <flavor> --<mode> (requires signing)",
+      "detail": "flutter build ipa --<mode> (requires signing)",
       "type": "shell",
       "command": "flutter",
-      "args": ["build", "ipa", "--flavor", "${input:flavor}", "--${input:mode}"],
+      "args": ["build", "ipa", "--${input:mode}"],
       "group": "build",
       "problemMatcher": []
     },
     {
       "label": "Build: iOS (no codesign)",
-      "detail": "flutter build ios --flavor <flavor> --<mode> --no-codesign",
+      "detail": "flutter build ios --<mode> --no-codesign",
       "type": "shell",
       "command": "flutter",
-      "args": ["build", "ios", "--flavor", "${input:flavor}", "--${input:mode}", "--no-codesign"],
+      "args": ["build", "ios", "--${input:mode}", "--no-codesign"],
       "group": "build",
       "problemMatcher": []
     },
     {
       "label": "Build: All platforms",
-      "detail": "APK, App Bundle and IPA for the chosen flavor and mode",
+      "detail": "APK, App Bundle and IPA for the chosen mode",
       "dependsOrder": "sequence",
       "dependsOn": ["Build: Android APK", "Build: Android App Bundle", "Build: iOS IPA"],
       "group": "build",
@@ -70,13 +70,6 @@
   ],
   "inputs": [
     {
-      "id": "flavor",
-      "type": "pickString",
-      "description": "Flavor",
-      "options": ["dev", "staging", "prod"],
-      "default": "dev"
-    },
-    {
       "id": "mode",
       "type": "pickString",
       "description": "Build mode",
@@ -86,7 +79,7 @@
     {
       "id": "appName",
       "type": "promptString",
-      "description": "App display name (flavor suffixes added automatically). Blank = keep."
+      "description": "App display name. Blank = keep."
     },
     {
       "id": "appId",

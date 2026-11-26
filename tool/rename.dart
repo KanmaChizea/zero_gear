@@ -3,16 +3,13 @@
 //
 // Usage:
 //   dart run tool/rename.dart --name "My App" --id com.acme.myapp [--package my_app]
-//
-// Flavor suffixes (" Dev", " Staging") are appended automatically; prod has none.
 import 'dart:io';
 
-const flavorSuffixes = {'dev': ' Dev', 'staging': ' Staging', 'prod': ''};
-
 const gradlePath = 'android/app/build.gradle.kts';
+const manifestPath = 'android/app/src/main/AndroidManifest.xml';
 const pbxprojPath = 'ios/Runner.xcodeproj/project.pbxproj';
 const infoPlistPath = 'ios/Runner/Info.plist';
-const flavorDartPath = 'lib/core/config/flavor.dart';
+const mainDartPath = 'lib/main.dart';
 const kotlinRoot = 'android/app/src/main/kotlin';
 
 final idPattern = RegExp(r'^[a-zA-Z][a-zA-Z0-9]*(\.[a-zA-Z][a-zA-Z0-9]*)+$');
@@ -51,36 +48,25 @@ void main(List<String> argv) {
 // ---------------------------------------------------------------------------
 
 void _renameApp(String name) {
-  // Android: resValue("string", "app_name", "...") inside each create("<flavor>") block.
-  _edit(gradlePath, (s) => s.replaceAllMapped(
-        RegExp(r'(create\("(\w+)"\)\s*\{[^}]*?resValue\("string", "app_name", ")(?:[^"\\]|\\.)*(")'),
-        (m) => '${m[1]}${_kotlinString(_androidResource(_flavored(name, m[2]!)))}${m[3]}',
+  // Android: the launcher name.
+  _edit(manifestPath, (s) => s.replaceFirstMapped(
+        RegExp(r'(<application\b[^>]*?android:label=")[^"]*(")'),
+        (m) => '${m[1]}${_xmlString(name)}${m[2]}',
       ));
 
-  // iOS: APP_DISPLAY_NAME inside each <Config>-<flavor> build configuration.
-  _edit(pbxprojPath, (s) => s.replaceAllMapped(
-        RegExp(r'/\* \w+-(\w+) \*/ = \{\s*isa = XCBuildConfiguration;.*?\n\t\t\};', dotAll: true),
-        (m) => m[0]!.replaceAllMapped(
-          RegExp(r'APP_DISPLAY_NAME = (?:"(?:[^"\\]|\\.)*"|[^;]*);'),
-          (_) => 'APP_DISPLAY_NAME = "${_pbxString(_flavored(name, m[1]!))}";',
-        ),
+  // iOS: the home screen name.
+  _edit(infoPlistPath, (s) => s.replaceFirstMapped(
+        RegExp(r'(<key>CFBundleDisplayName</key>\s*<string>)[^<]*(</string>)'),
+        (m) => '${m[1]}${_xmlString(name)}${m[2]}',
       ));
 
-  // Dart: Flavor enum values, e.g. dev('My App Dev').
-  _edit(flavorDartPath, (s) => s.replaceAllMapped(
-        RegExp(r"^(\s*)(\w+)\('(?:[^'\\]|\\.)*'\)", multiLine: true),
-        (m) => flavorSuffixes.containsKey(m[2])
-            ? "${m[1]}${m[2]}('${_dartString(_flavored(name, m[2]!))}')"
-            : m[0]!,
+  // Dart: the title MaterialApp reports, e.g. the browser tab on web.
+  _edit(mainDartPath, (s) => s.replaceFirstMapped(
+        RegExp(r"(const _appName = ')(?:[^'\\]|\\.)*(';)"),
+        (m) => '${m[1]}${_dartString(name)}${m[2]}',
       ));
 
-  stdout.writeln('✓ App name → "$name" (+ flavor suffixes)');
-}
-
-String _flavored(String name, String flavor) {
-  final suffix = flavorSuffixes[flavor];
-  if (suffix == null) _fail('Unknown flavor "$flavor" — update flavorSuffixes in tool/rename.dart.');
-  return '$name$suffix';
+  stdout.writeln('✓ App name → "$name"');
 }
 
 // ---------------------------------------------------------------------------
@@ -192,16 +178,12 @@ void _edit(String path, String Function(String) transform, {bool quiet = false})
   }
 }
 
-/// Android string resources treat \, ' and " specially.
-String _androidResource(String s) =>
-    s.replaceAll(r'\', r'\\').replaceAll("'", r"\'").replaceAll('"', r'\"');
-
-/// Contents of a Kotlin "..." literal.
-String _kotlinString(String s) =>
-    s.replaceAll(r'\', r'\\').replaceAll('"', r'\"').replaceAll(r'$', r'\$');
-
-/// Contents of a quoted pbxproj value.
-String _pbxString(String s) => s.replaceAll(r'\', r'\\').replaceAll('"', r'\"');
+/// Text inside an XML attribute or element.
+String _xmlString(String s) => s
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
 
 /// Contents of a Dart '...' literal.
 String _dartString(String s) =>
@@ -240,7 +222,7 @@ Rename the app across Android, iOS and Dart.
   dart run tool/rename.dart --name "My App" --id com.acme.myapp [--package my_app]
 
 Options (any combination, at least one; blank values are ignored):
-  --name      Base display name. Flavor suffixes are added: "My App Dev", "My App Staging", "My App" (prod).
+  --name      Display name on Android, iOS and the MaterialApp title.
   --id        Application ID (Android) and bundle identifier (iOS). Same value on both platforms.
   --package   Dart package name in pubspec.yaml (updates package: imports).''');
 }

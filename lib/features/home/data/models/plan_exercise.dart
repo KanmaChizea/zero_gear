@@ -8,6 +8,7 @@ class PlanExercise extends Equatable {
     required this.position,
     required this.sets,
     required this.reps,
+    required this.holdSeconds,
     required this.exercise,
   });
 
@@ -16,6 +17,7 @@ class PlanExercise extends Equatable {
     position: (json['position']! as num).toInt(),
     sets: (json['sets']! as num).toInt(),
     reps: json['reps']! as String,
+    holdSeconds: (json['hold_seconds'] as num?)?.toInt(),
     exercise: Exercise.fromJson(json),
   );
 
@@ -25,6 +27,9 @@ class PlanExercise extends Equatable {
   final int sets;
 
   final String reps;
+
+  final int? holdSeconds;
+
   final Exercise exercise;
 
   String get repsText => int.tryParse(reps) != null ? '$reps reps' : reps;
@@ -35,8 +40,16 @@ class PlanExercise extends Equatable {
     'position': position,
     'sets': sets,
     'reps': reps,
+    'hold_seconds': holdSeconds,
   };
 
   @override
-  List<Object?> get props => [phase, position, sets, reps, exercise];
+  List<Object?> get props => [
+    phase,
+    position,
+    sets,
+    reps,
+    holdSeconds,
+    exercise,
+  ];
 }

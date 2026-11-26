@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_tts/flutter_tts.dart';
 
 class AudioGuide {
@@ -8,22 +10,56 @@ class AudioGuide {
   /// next one has started, so it must not cut off the next one's audio.
   Object? _owner;
 
+  bool _speaking = false;
+  Completer<void>? _started;
+  double? _rate;
+
+  static const _rateNormal = 0.45;
+  static const _rateBrisk = 0.55;
+  static const _startTimeout = Duration(seconds: 1);
+
   Future<void> _configure() async {
+    _tts.setStartHandler(() {
+      _speaking = true;
+      final started = _started;
+      if (started != null && !started.isCompleted) started.complete();
+    });
+    _tts.setCompletionHandler(() => _speaking = false);
+    _tts.setCancelHandler(() => _speaking = false);
+    _tts.setErrorHandler((_) => _speaking = false);
     await _tts.setLanguage('en-US');
-    await _tts.setSpeechRate(0.45);
     await _tts.setVolume(1);
     await _tts.setPitch(1);
   }
 
-  Future<void> speak(String text, {required Object owner}) async {
-    if (text.trim().isEmpty) return;
-    _owner = owner;
+  Future<void> warmUp() async {
     try {
       await (_ready ??= _configure());
-      await _tts.stop();
+    } catch (_) {}
+  }
+
+  Future<bool> speak(
+    String text, {
+    required Object owner,
+    bool brisk = false,
+  }) async {
+    if (text.trim().isEmpty) return false;
+    _owner = owner;
+    final started = _started = Completer<void>();
+    try {
+      await (_ready ??= _configure());
+      if (_speaking) await _tts.stop();
+      final rate = brisk ? _rateBrisk : _rateNormal;
+      if (rate != _rate) {
+        await _tts.setSpeechRate(rate);
+        _rate = rate;
+      }
       await _tts.speak(text);
+      await started.future.timeout(_startTimeout);
+      return true;
     } catch (_) {
       // Audio is a bonus; the workout carries on without it.
+      return false;
     }
   }
 
