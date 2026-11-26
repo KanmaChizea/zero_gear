@@ -15,6 +15,7 @@ import 'package:zero_gear/core/storage/secure_session_storage.dart';
 import 'package:zero_gear/core/theme/app_theme.dart';
 import 'package:zero_gear/core/theme/theme_cubit.dart';
 import 'package:zero_gear/core/utils/scale_util.dart';
+import 'package:zero_gear/core/widgets/feedback/app_update_host.dart';
 import 'package:zero_gear/core/widgets/feedback/loader_host.dart';
 import 'package:zero_gear/provider.dart';
 
@@ -74,7 +75,7 @@ class App extends StatelessWidget {
         return Title(
           title: _appName,
           color: Theme.of(context).scaffoldBackgroundColor,
-          child: LoaderHost(child: child!),
+          child: LoaderHost(child: AppUpdateHost(child: child!)),
         );
       },
     );

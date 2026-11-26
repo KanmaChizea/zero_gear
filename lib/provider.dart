@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:zero_gear/core/app_update/app_update_cubit.dart';
 import 'package:zero_gear/core/audio/audio_guide.dart';
 import 'package:zero_gear/core/shared_features/session/data/models/session_state.dart';
 import 'package:zero_gear/core/shared_features/session/data/services/session_cubit.dart';
@@ -47,6 +48,7 @@ class AppProvider extends StatelessWidget {
       providers: [
         BlocProvider.value(value: session),
         BlocProvider.value(value: themeCubit),
+        BlocProvider(create: (_) => AppUpdateCubit(), lazy: false),
       ],
       child: MultiRepositoryProvider(
         providers: [
