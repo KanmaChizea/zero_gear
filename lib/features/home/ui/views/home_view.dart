@@ -9,6 +9,7 @@ import 'package:zero_gear/core/widgets/feedback/app_toast.dart';
 import 'package:zero_gear/core/widgets/feedback/error_view.dart';
 import 'package:zero_gear/core/widgets/icons/app_logo.dart';
 import 'package:zero_gear/core/widgets/icons/svg_icon.dart';
+import 'package:zero_gear/features/home/ui/widgets/home/coming_up.dart';
 import 'package:zero_gear/features/home/ui/widgets/home/progress_calendar.dart';
 import 'package:zero_gear/features/home/ui/widgets/home/progress_summary.dart';
 import 'package:zero_gear/features/home/ui/widgets/home/todays_card.dart';
@@ -107,6 +108,14 @@ class _HomeBody extends StatelessWidget {
                       },
                       onGiveUp: viewModel.giveUp,
                     ),
+                    if (data.upcoming.isNotEmpty)
+                      ComingUp(
+                        days: data.upcoming,
+                        onOpen: (day) => context.pushNamed(
+                          AppRoute.dayDetail.name,
+                          pathParameters: {'day': '$day'},
+                        ),
+                      ),
                     ProgressSummary(summary: data),
                     ProgressCalendar(
                       data: data.calendar,

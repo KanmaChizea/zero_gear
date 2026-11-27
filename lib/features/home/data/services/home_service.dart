@@ -33,9 +33,23 @@ class HomeService extends Cubit<HomeSummary?> {
     return history.andThen<HomeSummary>((history) async {
       final next = await _plan.summaryFor(history.nextDay);
       final summary = await next.andThen<HomeSummary>((nextDay) async {
-        final plan = await _plan.planDay(history.nextDay);
-        return plan.map(
-          (nextPlan) => _summarize(profile, history, nextDay, nextPlan, active),
+        final plans = await Future.wait([
+          for (var i = 0; i <= PlanService.previewDays; i++)
+            _plan.planDay(history.nextDay + i),
+        ]);
+        final upcoming = [
+          for (final plan in plans.skip(1))
+            if (plan case Ok(:final value)) value,
+        ];
+        return plans.first.map(
+          (nextPlan) => _summarize(
+            profile,
+            history,
+            nextDay,
+            nextPlan,
+            upcoming,
+            active,
+          ),
         );
       });
       if (summary case Ok(:final value)) emit(value);
@@ -66,6 +80,7 @@ class HomeService extends Cubit<HomeSummary?> {
     WorkoutHistory history,
     PlanDaySummary nextDay,
     PlanDay nextPlan,
+    List<PlanDay> upcoming,
     ActiveWorkout? active,
   ) {
     final today = DateTime.now().dateOnly;
@@ -89,6 +104,7 @@ class HomeService extends Cubit<HomeSummary?> {
       profile: profile,
       nextDay: nextDay,
       nextPlan: nextPlan,
+      upcoming: upcoming,
       todayWorkout: history.on(today),
       activeWorkout: active,
       stats: HomeStats(

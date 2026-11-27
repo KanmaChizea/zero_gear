@@ -16,6 +16,8 @@ class PlanService extends Cubit<PlanState> {
   final _planDays = <int, PlanDay>{};
   final _exercises = <String, Exercise>{};
 
+  static const previewDays = 3;
+
   static const _namedDayCount = 96;
   static const _splitLength = 6;
 

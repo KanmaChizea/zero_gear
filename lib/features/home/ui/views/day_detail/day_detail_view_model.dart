@@ -25,12 +25,31 @@ class DayDetailViewModel extends Cubit<DayDetailUiState> {
     emit(DayDetailUiState.initial());
 
     final active = await _workoutService.restoreActiveWorkout();
-    final result = await _planService.planDay(day);
+    final history = await _workoutService.history();
+    final upNext = history.fold<int?>((_) => null, (h) => h.nextDay);
     final isResuming = active?.day.overallDay == day;
+
+    if (!isResuming &&
+        upNext != null &&
+        day > upNext + PlanService.previewDays) {
+      emit(
+        DayDetailUiState(
+          plan: AsyncValue.error(
+            'You can look up to ${PlanService.previewDays} days ahead.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    final result = await _planService.planDay(day);
     emit(
       DayDetailUiState(
         isResuming: isResuming,
-        isPreview: !isResuming && _workoutService.finishedToday,
+        isPreview:
+            !isResuming &&
+            (_workoutService.finishedToday ||
+                (upNext != null && day != upNext)),
         startsWithStretch:
             (_session.user?.profile?.preWorkoutStretch ?? false) &&
             result.fold((_) => false, (plan) => plan.warmUp.isNotEmpty),

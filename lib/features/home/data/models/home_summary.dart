@@ -32,6 +32,7 @@ class HomeSummary extends Equatable {
     required this.profile,
     required this.nextDay,
     required this.nextPlan,
+    required this.upcoming,
     required this.todayWorkout,
     required this.activeWorkout,
     required this.stats,
@@ -44,6 +45,7 @@ class HomeSummary extends Equatable {
 
   final PlanDaySummary nextDay;
   final PlanDay nextPlan;
+  final List<PlanDay> upcoming;
 
   final WorkoutSummary? todayWorkout;
 
@@ -66,6 +68,7 @@ class HomeSummary extends Equatable {
     profile,
     nextDay,
     nextPlan,
+    upcoming,
     todayWorkout,
     activeWorkout,
     stats,
