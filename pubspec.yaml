@@ -48,6 +48,7 @@ dependencies:
   supabase_flutter: ^2.18.3
   cached_network_image: ^4.0.3
   flutter_tts: ^4.2.5
+  audioplayers: ^6.8.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -64,6 +65,7 @@ flutter:
     - .env
     - assets/svgs/
     - assets/images/
+    - assets/sounds/
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

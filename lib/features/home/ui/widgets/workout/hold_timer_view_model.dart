@@ -18,6 +18,7 @@ class HoldTimerViewModel extends Cubit<HoldTimerUiState> {
   static const _setFor = Duration(seconds: 2);
   static const _showDoneFor = Duration(seconds: 2);
   static const _maxVoiceLag = Duration(milliseconds: 800);
+  static const _spokenFrom = 5;
 
   Timer? _ticker;
 
@@ -71,19 +72,27 @@ class HoldTimerViewModel extends Cubit<HoldTimerUiState> {
     final clock = Stopwatch()..start();
     final total = Duration(seconds: seconds);
     var said = seconds;
+    var beeped = seconds;
     emit(HoldTimerUiState(stage: HoldTimerStage.hold, secondsLeft: seconds));
     _ticker = Timer.periodic(const Duration(milliseconds: 50), (ticker) {
       final elapsed = clock.elapsed;
+      final left = seconds - elapsed.inSeconds;
+
+      if (left < beeped && left > _spokenFrom) {
+        beeped = left;
+        unawaited(_audio.beep());
+      }
 
       final due = seconds - (elapsed + voiceLag).inSeconds;
       if (due < said && said > 0) {
         said = due < 0 ? 0 : due;
-        unawaited(
-          _audio.speak(said > 0 ? '$said' : 'Done', owner: this, brisk: true),
-        );
+        if (said <= _spokenFrom) {
+          unawaited(
+            _audio.speak(said > 0 ? '$said' : 'Done', owner: this, brisk: true),
+          );
+        }
       }
 
-      final left = seconds - elapsed.inSeconds;
       if (left > 0) {
         emit(HoldTimerUiState(stage: HoldTimerStage.hold, secondsLeft: left));
       } else if (elapsed < total + _showDoneFor) {

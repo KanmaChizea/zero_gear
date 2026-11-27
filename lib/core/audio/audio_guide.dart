@@ -1,10 +1,15 @@
 import 'dart:async';
 
+import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_tts/flutter_tts.dart';
 
 class AudioGuide {
   final FlutterTts _tts = FlutterTts();
   Future<void>? _ready;
+
+  final AudioPlayer _beeper = AudioPlayer();
+  Future<void>? _beeperReady;
 
   /// Who is currently speaking. A screen being replaced closes after the
   /// next one has started, so it must not cut off the next one's audio.
@@ -17,6 +22,7 @@ class AudioGuide {
   static const _rateNormal = 0.45;
   static const _rateBrisk = 0.55;
   static const _startTimeout = Duration(seconds: 1);
+  static final _beepSound = AssetSource('sounds/beep.wav');
 
   Future<void> _configure() async {
     _tts.setStartHandler(() {
@@ -32,9 +38,33 @@ class AudioGuide {
     await _tts.setPitch(1);
   }
 
+  Future<void> _configureBeeper() async {
+    if (!kIsWeb) {
+      await AudioPlayer.global.setAudioContext(
+        AudioContextConfig(
+          focus: AudioContextConfigFocus.mixWithOthers,
+        ).build(),
+      );
+      await _beeper.setPlayerMode(PlayerMode.lowLatency);
+    }
+    await _beeper.setReleaseMode(ReleaseMode.stop);
+    await _beeper.setSource(_beepSound);
+  }
+
   Future<void> warmUp() async {
     try {
       await (_ready ??= _configure());
+    } catch (_) {}
+    try {
+      await (_beeperReady ??= _configureBeeper());
+    } catch (_) {}
+  }
+
+  Future<void> beep() async {
+    try {
+      await (_beeperReady ??= _configureBeeper());
+      await _beeper.stop();
+      await _beeper.resume();
     } catch (_) {}
   }
 
