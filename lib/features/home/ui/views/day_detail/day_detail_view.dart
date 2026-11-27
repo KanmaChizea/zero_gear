@@ -88,7 +88,7 @@ class _DayDetailBody extends StatelessWidget {
               loading: () => const Center(child: CircularProgressIndicator()),
               data: (data) => Column(
                 spacing: 8,
-                children: data.exercises
+                children: data.main
                     .map((e) => ExerciseTile(item: e))
                     .toList(),
               ),
