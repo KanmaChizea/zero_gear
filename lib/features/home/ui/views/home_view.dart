@@ -89,6 +89,10 @@ class _HomeBody extends StatelessWidget {
                         AppRoute.dayDetail.name,
                         pathParameters: {'day': '${data.nextDay.overallDay}'},
                       ),
+                      onPreview: () => context.pushNamed(
+                        AppRoute.dayDetail.name,
+                        pathParameters: {'day': '${data.nextDay.overallDay}'},
+                      ),
                       onResume: () async {
                         if (!await viewModel.resume() || !context.mounted) {
                           return;

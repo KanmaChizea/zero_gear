@@ -7,6 +7,7 @@ class DayDetailUiState extends Equatable {
   const DayDetailUiState({
     required this.plan,
     this.isResuming = false,
+    this.isPreview = false,
     this.startsWithStretch = false,
     this.isStarting = false,
     this.errorMessage,
@@ -15,6 +16,7 @@ class DayDetailUiState extends Equatable {
   final AsyncValue<PlanDay> plan;
 
   final bool isResuming;
+  final bool isPreview;
   final bool startsWithStretch;
 
   final bool isStarting;
@@ -27,6 +29,7 @@ class DayDetailUiState extends Equatable {
   List<Object?> get props => [
     plan,
     isResuming,
+    isPreview,
     startsWithStretch,
     isStarting,
     errorMessage,
@@ -35,6 +38,7 @@ class DayDetailUiState extends Equatable {
   DayDetailUiState copyWith({
     AsyncValue<PlanDay>? plan,
     bool? isResuming,
+    bool? isPreview,
     bool? startsWithStretch,
     bool? isStarting,
     String? Function()? errorMessage,
@@ -42,6 +46,7 @@ class DayDetailUiState extends Equatable {
     return DayDetailUiState(
       plan: plan ?? this.plan,
       isResuming: isResuming ?? this.isResuming,
+      isPreview: isPreview ?? this.isPreview,
       startsWithStretch: startsWithStretch ?? this.startsWithStretch,
       isStarting: isStarting ?? this.isStarting,
       errorMessage: errorMessage != null ? errorMessage() : this.errorMessage,

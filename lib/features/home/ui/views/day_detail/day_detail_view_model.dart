@@ -26,9 +26,11 @@ class DayDetailViewModel extends Cubit<DayDetailUiState> {
 
     final active = await _workoutService.restoreActiveWorkout();
     final result = await _planService.planDay(day);
+    final isResuming = active?.day.overallDay == day;
     emit(
       DayDetailUiState(
-        isResuming: active?.day.overallDay == day,
+        isResuming: isResuming,
+        isPreview: !isResuming && _workoutService.finishedToday,
         startsWithStretch:
             (_session.user?.profile?.preWorkoutStretch ?? false) &&
             result.fold((_) => false, (plan) => plan.warmUp.isNotEmpty),
@@ -47,7 +49,9 @@ class DayDetailViewModel extends Cubit<DayDetailUiState> {
   ///   with the first exercise), so go to the warm-up prompt;
   /// - starting without one: create the workout, then go to exercise 1.
   Future<bool> proceed() async {
-    if (state.isStarting || !state.plan.hasData) return false;
+    if (state.isStarting || state.isPreview || !state.plan.hasData) {
+      return false;
+    }
     if (state.isResuming || state.startsWithStretch) return true;
 
     emit(state.copyWith(isStarting: true));

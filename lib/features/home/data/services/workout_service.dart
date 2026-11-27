@@ -33,6 +33,10 @@ class WorkoutService extends Cubit<WorkoutState> {
 
   bool _historyStale = false;
 
+  bool get finishedToday =>
+      state.history?.on(DateTime.now().dateOnly)?.status ==
+      WorkoutStatus.completed;
+
   Future<ActiveWorkout?> restoreActiveWorkout() async {
     if (_restored) return state.active;
 
@@ -62,8 +66,7 @@ class WorkoutService extends Cubit<WorkoutState> {
     if (userId == null) {
       return const Result.error(AppException('Please sign in first.'));
     }
-    final today = DateTime.now().dateOnly;
-    if (state.history?.on(today)?.status == WorkoutStatus.completed) {
+    if (finishedToday) {
       return const Result.error(
         AppException("You already finished today's workout."),
       );

@@ -11,6 +11,7 @@ class TodaysCard extends StatelessWidget {
     super.key,
     required this.data,
     required this.onStart,
+    required this.onPreview,
     required this.onResume,
     required this.onGiveUp,
     this.isStarting = false,
@@ -20,6 +21,7 @@ class TodaysCard extends StatelessWidget {
 
   final HomeSummary data;
   final VoidCallback onStart;
+  final VoidCallback onPreview;
   final VoidCallback onResume;
   final VoidCallback onGiveUp;
   final bool isStarting;
@@ -27,74 +29,79 @@ class TodaysCard extends StatelessWidget {
   final bool isGivingUp;
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: AppSpacing.symmetricPadding(vertical: 24, horizontal: 24),
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: context.colors.bgInverse,
-        borderRadius: BorderRadius.circular(20.r),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: 8.h,
-        children: [
-          AppText(
-            data.line1,
-            color: context.colors.textInverse,
-            style: AppTextStyles.label,
+    final radius = BorderRadius.circular(20.r);
+    return Material(
+      color: context.colors.bgInverse,
+      borderRadius: radius,
+      child: InkWell(
+        borderRadius: radius,
+        onTap: data.startsTomorrow ? onPreview : null,
+        child: Container(
+          padding: AppSpacing.symmetricPadding(vertical: 24, horizontal: 24),
+          width: double.infinity,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 8.h,
+            children: [
+              AppText(
+                data.line1,
+                color: context.colors.textInverse,
+                style: AppTextStyles.label,
+              ),
+              AppText(
+                data.line2,
+                color: context.colors.textInverse,
+                style: AppTextStyles.title,
+              ),
+              AppText(
+                data.line3,
+                color: context.colors.textInverse,
+                style: AppTextStyles.caption,
+              ),
+              if (data.line4 != null)
+                AppText(
+                  data.line4!,
+                  color: context.colors.textInverse,
+                  style: AppTextStyles.caption,
+                ),
+              if (!data.startsTomorrow)
+                Row(
+                  children: [
+                    if (data.activeWorkout != null || data.unfinishedToday != null)
+                      Button(
+                        label: 'Resume',
+                        onPressed: onResume,
+                        isLoading: isResuming,
+                        enabled: !isGivingUp,
+                        fullWidth: false,
+                        backgroundColor: context.colors.bgPrimary,
+                        foregroundColor: context.colors.textPrimary,
+                      ),
+                    // An unfinished workout is already saved as incomplete, so
+                    // there is nothing left to give up.
+                    if (data.activeWorkout != null)
+                      Button(
+                        label: 'Give up',
+                        onPressed: onGiveUp,
+                        isLoading: isGivingUp,
+                        fullWidth: false,
+                        variant: ButtonVariant.text,
+                        foregroundColor: context.colors.textInverse,
+                      ),
+                    if (data.activeWorkout == null && data.unfinishedToday == null)
+                      Button(
+                        label: 'Start workout',
+                        onPressed: onStart,
+                        isLoading: isStarting,
+                        fullWidth: false,
+                        backgroundColor: context.colors.bgPrimary,
+                        foregroundColor: context.colors.textPrimary,
+                      ),
+                  ],
+                ),
+            ],
           ),
-          AppText(
-            data.line2,
-            color: context.colors.textInverse,
-            style: AppTextStyles.title,
-          ),
-          AppText(
-            data.line3,
-            color: context.colors.textInverse,
-            style: AppTextStyles.caption,
-          ),
-          if (data.line4 != null)
-            AppText(
-              data.line4!,
-              color: context.colors.textInverse,
-              style: AppTextStyles.caption,
-            ),
-          if (!data.startsTomorrow)
-            Row(
-              children: [
-                if (data.activeWorkout != null || data.unfinishedToday != null)
-                  Button(
-                    label: 'Resume',
-                    onPressed: onResume,
-                    isLoading: isResuming,
-                    enabled: !isGivingUp,
-                    fullWidth: false,
-                    backgroundColor: context.colors.bgPrimary,
-                    foregroundColor: context.colors.textPrimary,
-                  ),
-                // An unfinished workout is already saved as incomplete, so
-                // there is nothing left to give up.
-                if (data.activeWorkout != null)
-                  Button(
-                    label: 'Give up',
-                    onPressed: onGiveUp,
-                    isLoading: isGivingUp,
-                    fullWidth: false,
-                    variant: ButtonVariant.text,
-                    foregroundColor: context.colors.textInverse,
-                  ),
-                if (data.activeWorkout == null && data.unfinishedToday == null)
-                  Button(
-                    label: 'Start workout',
-                    onPressed: onStart,
-                    isLoading: isStarting,
-                    fullWidth: false,
-                    backgroundColor: context.colors.bgPrimary,
-                    foregroundColor: context.colors.textPrimary,
-                  ),
-              ],
-            ),
-        ],
+        ),
       ),
     );
   }

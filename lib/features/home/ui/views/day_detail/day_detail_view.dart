@@ -61,28 +61,30 @@ class _DayDetailBody extends StatelessWidget {
                       'about ${plan.estimatedMinutes} min · '
                       'Targets ${plan.focusMuscles.join(', ')}',
                 ),
-          footer: Button(
-            label: state.isResuming
-                ? 'Resume'
-                : 'Start Day ${formatNumber(viewModel.day)}',
-            isLoading: state.isStarting,
-            enabled: state.plan.hasData,
-            onPressed: () async {
-              final proceed = await viewModel.proceed();
-              if (!proceed || !context.mounted) return;
-              if (!state.isResuming && state.startsWithStretch) {
-                await context.pushNamed(
-                  AppRoute.stretchOffer.name,
-                  pathParameters: {
-                    'phase': DayPhase.warmup.name,
-                    'day': '${viewModel.day}',
+          footer: state.isPreview
+              ? null
+              : Button(
+                  label: state.isResuming
+                      ? 'Resume'
+                      : 'Start Day ${formatNumber(viewModel.day)}',
+                  isLoading: state.isStarting,
+                  enabled: state.plan.hasData,
+                  onPressed: () async {
+                    final proceed = await viewModel.proceed();
+                    if (!proceed || !context.mounted) return;
+                    if (!state.isResuming && state.startsWithStretch) {
+                      await context.pushNamed(
+                        AppRoute.stretchOffer.name,
+                        pathParameters: {
+                          'phase': DayPhase.warmup.name,
+                          'day': '${viewModel.day}',
+                        },
+                      );
+                    } else {
+                      await context.pushNamed(AppRoute.activeWorkout.name);
+                    }
                   },
-                );
-              } else {
-                await context.pushNamed(AppRoute.activeWorkout.name);
-              }
-            },
-          ),
+                ),
           children: [
             state.plan.when(
               loading: () => const Center(child: CircularProgressIndicator()),
